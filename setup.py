@@ -7,7 +7,7 @@ with open('README.md') as f:
 
 setuptools.setup(
     name="filelibpy",
-    version="0.0.6",
+    version="0.0.7",
     scripts=["bin/filelib"],
     author="filelib",
     author_email="",
@@ -23,7 +23,7 @@ setuptools.setup(
     ],
     python_requires=">=3.5",
     classifiers=[
-        "Development Status :: 3 - Alpha"
+        "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.5",
