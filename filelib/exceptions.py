@@ -51,3 +51,9 @@ class AcquiringAccessTokenFailedException(FilelibBaseException):
     """
     Raised when request to acquire ACCESS_TOKEN returns error.
     """
+
+
+class FileUploadFailedException(FilelibBaseException):
+    """
+    Raised when request to upload files fails.
+    """

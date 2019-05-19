@@ -1,13 +1,11 @@
 import requests
 import json
-from pprint import pprint, pformat
 from configparser import ConfigParser
 import os
-from datetime import datetime, timezone
-# 3RD party
+from datetime import datetime
 import jwt
 import pytz
-from exceptions import *
+from .exceptions import *
 
 # FILELIB API ENDPOINTS
 AUTHENTICATION_URL = "http://localhost:9000/auth/"
@@ -27,7 +25,7 @@ CONFIG_CAPTURE_OPTIONS = [
 FORM_FIELD_FILE_NAME = 'filelib_file'
 
 
-class Filelib:
+class Client:
     """
     Organize Filelib API operations here
 
@@ -76,7 +74,8 @@ class Filelib:
         # TODO: Verify Expiration
         try:
             assert self.__ACCESS_TOKEN is not None, "NO_ACCESS_TOKEN_PRESENT"
-            assert self.__ACCESS_TOKEN_EXPIRATION and datetime.now(tz=pytz.UTC) < self.__ACCESS_TOKEN_EXPIRATION, "Expired"
+            assert self.__ACCESS_TOKEN_EXPIRATION and datetime.now(
+                tz=pytz.UTC) < self.__ACCESS_TOKEN_EXPIRATION, "Expired"
         except AssertionError as e:
             import traceback
             traceback.print_exc()
@@ -137,9 +136,6 @@ class Filelib:
 
         response = requests.post(AUTHENTICATION_URL, headers=headers)
         json_response = json.loads(response.content)
-
-        print('Response', response.ok, response.status_code)
-        print('JSON RESPONSE', pformat(json_response))
         assert response.ok, AcquiringAccessTokenFailedException(json_response.get('error', None))
 
         # access_token_expiration = json_response.get('data', {}).get('expiration')
@@ -148,29 +144,31 @@ class Filelib:
         access_token_expiration_date = datetime.strptime(access_token_expiration, DATETIME_PRINT_FORMAT)
         self.__ACCESS_TOKEN_EXPIRATION = access_token_expiration_date
 
-    def upload(self):
-        files = [
-            # (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/pyfile-1.pdf', 'rb')),
-            # (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/test', 'rb')),
-            (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/10mb.jpg', 'rb')),
-            # (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/nasa2.jpg', 'rb')),
-            # (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/nasa3.tif', 'rb')),
-        ]
+    def upload(self, files):
+        """
+        Upload given files to Filelib API
+
+        :param files: a list object that contains paths of files to be uploaded
+            files = [
+                (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/pyfile-1.pdf', 'rb')),
+                (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/test', 'rb')),
+                (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/10mb.jpg', 'rb')),
+                (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/nasa2.jpg', 'rb')),
+                (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/nasa3.tif', 'rb')),
+            ]
+        :return:
+        """
         headers = {
             'FILELIB_ACCESS_TOKEN': self.get_access_token()
         }
         data = {
             'make_copy': False
         }
+
+        _files = [(FORM_FIELD_FILE_NAME, open(f_path)) for f_path in files]
         req = requests.post(FILE_UPLOAD_URL, headers=headers, files=files, data=data)
-        print('Status code', req.status_code)
+        if not req.ok:
+            raise FileUploadFailedException
         json_response = json.loads(req.content)
-        print('Response', pformat(json_response))
-
-
-filelib = Filelib(credentials_source='credentials_file')
-print(filelib.get_creds())
-print('ACCESS TOKEN', filelib.get_access_token())
-print('IS GOOD ACCESS TOKEN', filelib.is_access_token())
-print('UPLAOD', filelib.upload())
+        return json_response
 
