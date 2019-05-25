@@ -2,14 +2,19 @@ import requests
 import json
 from configparser import ConfigParser
 import os
+from io import BufferedReader, TextIOWrapper
 from datetime import datetime
 import jwt
 import pytz
 from .exceptions import *
 from .errors import *
-
+from sys import platform
+from uuid import uuid4
 # debugging
 from pprint import pprint, pformat
+
+if platform == "win32":
+    import ntpath as os
 
 # FILELIB API ENDPOINTS
 AUTHENTICATION_URL = "http://localhost:9000/auth/"
@@ -156,20 +161,6 @@ class Client:
         access_token_expiration_date = datetime.strptime(access_token_expiration, DATETIME_PRINT_FORMAT)
         self.__ACCESS_TOKEN_EXPIRATION = access_token_expiration_date
 
-    def upload(self, files, config=None):
-        """
-        Upload given files to Filelib API
-
-        :param config: a dict that contains configuration options for the upload process
-        :param files: a list object of file paths to upload
-        :return:
-        """
-        self.set_headers(FILELIB_ACCESS_TOKEN_HEADER_NAME, self.get_access_token())
-        self.__set_pool_config(config)
-
-        self.set_files(files)
-        return self.__upload()
-
     def __set_pool_config(self, config):
         """
         this is to be used internally by the Client class
@@ -209,7 +200,9 @@ class Client:
 
     def __prep_file_to_upload(self, file):
         """
-
+        Read file, if parm is string into memory for upload
+        Or read the file-like object from memory for upload.
+        https://2.python-requests.org/en/master/user/quickstart/#post-a-multipart-encoded-file
         :param file: str -> Path to the file that will be uploaded.
 
         :return:[
@@ -220,11 +213,22 @@ class Client:
                 (FORM_FIELD_FILE_NAME, open('path_to_file/nasa3.tif', 'rb')),
             ]
         """
-
-        request_file_object = [(FORM_FIELD_FILE_NAME, open(file, 'rb'))]
+        if type(file) is str:
+            content = open(file, 'rb')
+            file_name = content.name
+        else:
+            content = file.read()
+            file_name = file.name
+        file_name = os.path.basename(file_name)
+        if not file_name:
+            file_name = str(uuid4())
+        request_file_object = [(FORM_FIELD_FILE_NAME, (file_name, content))]
         return request_file_object
 
     def __upload_file(self, file):
+        # Set ACCESS_TOKEN request header
+        self.set_headers(FILELIB_ACCESS_TOKEN_HEADER_NAME, self.get_access_token())
+
         headers = self.get_headers()
         config = self.get_config()
         # files = [(FORM_FIELD_FILE_NAME, open(file, 'rb'))]
@@ -249,3 +253,45 @@ class Client:
             out.append(self.__upload_file(file))
 
         return out
+
+    def upload(self, files, config=None):
+        """
+        Upload given files to Filelib API
+
+        :param config: a dict that contains configuration options for the upload process
+        :param files: a list object of file paths to upload
+        :return:
+        """
+        self.__set_pool_config(config)
+
+        self.set_files(files)
+        return self.__upload()
+
+    def upload_file_objects(self, files, config=None):
+        """
+        Upload file-like objects.
+        This method allows client to upload a file that is already in memory
+        :param files: Type list object with file-like object items
+        :param config: a dict that contains configuration options for the upload process
+        :return: self.__upload()
+        """
+        for file in files:
+            self.__add_file_like_object(file)
+        for key, value in config.items():
+            self.set_config(key, value)
+        return self.__upload()
+
+    def __add_file_like_object(self, fileobj):
+        # A file-like object must be readable in `rb`|binary mode|format
+        # If file-like object cannot be read in `rb` or converted to binary on the go,
+        # Raise error
+        assert hasattr(fileobj, 'readable'), "File-like object must have a readable method."
+        assert fileobj.readable(), "File-like object must must be readable."
+        if type(fileobj) == BufferedReader:
+            pass
+        elif type(fileobj) == TextIOWrapper:
+            if hasattr(fileobj, 'buffer'):
+                fileobj = fileobj.buffer
+            else:
+                raise FileUnsupportedReadModeException
+        self.__files.append(fileobj)

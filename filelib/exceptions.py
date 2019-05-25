@@ -57,3 +57,9 @@ class FileUploadFailedException(FilelibBaseException):
     """
     Raised when request to upload files fails.
     """
+
+
+class FileUnsupportedReadModeException(FilelibBaseException):
+    """
+    Raised when file-like object cannot be read in binary mode.
+    """

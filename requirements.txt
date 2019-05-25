@@ -2,3 +2,4 @@ twine==1.13.0
 PyJWT==1.7.1
 pytz==2019.1
 requests==2.22.0
+python-magic==0.4.15
