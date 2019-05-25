@@ -28,6 +28,9 @@ CONFIG_CAPTURE_OPTIONS = [
 # FORM_FIELD_FILE_NAME = 'filelib_file'
 FORM_FIELD_FILE_NAME = 'filelib_file'
 
+# THIS IS THE NAME OF THE KEY IN THE HEADER TO HOLD THE ACCESS TOKEN VALUE
+FILELIB_ACCESS_TOKEN_HEADER_NAME = 'FILELIB_ACCESS_TOKEN'
+
 
 class Client:
     """
@@ -158,9 +161,10 @@ class Client:
         Upload given files to Filelib API
 
         :param config: a dict that contains configuration options for the upload process
+        :param files: a list object of file paths to upload
         :return:
         """
-        self.set_headers('FILELIB_ACCESS_TOKEN', self.get_access_token())
+        self.set_headers(FILELIB_ACCESS_TOKEN_HEADER_NAME, self.get_access_token())
         self.__set_pool_config(config)
 
         self.set_files(files)
@@ -188,13 +192,13 @@ class Client:
         self.__headers[key] = value
 
     def set_files(self, files: list):
-        assert type(files) is list, TypeError('files parameter must be a type list object')
+        assert type(files) is list, TypeError(FILES_PARAMETER_UNSUPPORTED_TYPE)
         for file in files:
             self.add_file(file)
 
     def add_file(self, file: str):
         # Ensure type is string
-        assert type(file) is str, TypeError('files parameter must be a type list object')
+        assert type(file) is str, TypeError(FILES_PARAMETER_UNSUPPORTED_TYPE)
         # Ensure the path|file exists
         if not os.path.isfile(file):
             raise FileNotFoundError(FILE_DOES_NOT_EXIST.format(file))
@@ -205,9 +209,8 @@ class Client:
 
     def __prep_file_to_upload(self, file):
         """
-        TODO: upload one file at a time if necessary (bigger than 10MB in size)
 
-        :param files: a list object that contains paths of files to be uploaded
+        :param file: str -> Path to the file that will be uploaded.
 
         :return:[
                 (FORM_FIELD_FILE_NAME, open('path_to_file/pyfile-1.pdf', 'rb')),
