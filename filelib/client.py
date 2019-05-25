@@ -6,6 +6,10 @@ from datetime import datetime
 import jwt
 import pytz
 from .exceptions import *
+from .errors import *
+
+# debugging
+from pprint import pprint, pformat
 
 # FILELIB API ENDPOINTS
 AUTHENTICATION_URL = "http://localhost:9000/auth/"
@@ -53,6 +57,13 @@ class Client:
     # This property value indicates what the section is called in credentials file.
     CREDENTIALS_CONFIG_FILE_SECTION_NAME = 'filelib'
 
+    # TODO: Maybe load defaults from API end-point
+    __config = {
+        'make_copy': False
+    }
+    __headers = {}
+    __files = []
+
     def __init__(self, credentials_source='credentials_file', credentials_path='~/.filelib/credentials'):
         assert credentials_source in CONFIG_CAPTURE_OPTIONS, UnsupportedCredentialsSourceException
         if credentials_source == 'credentials_file':
@@ -77,8 +88,6 @@ class Client:
             assert self.__ACCESS_TOKEN_EXPIRATION and datetime.now(
                 tz=pytz.UTC) < self.__ACCESS_TOKEN_EXPIRATION, "Expired"
         except AssertionError as e:
-            import traceback
-            traceback.print_exc()
             return False
         return True
 
@@ -144,31 +153,96 @@ class Client:
         access_token_expiration_date = datetime.strptime(access_token_expiration, DATETIME_PRINT_FORMAT)
         self.__ACCESS_TOKEN_EXPIRATION = access_token_expiration_date
 
-    def upload(self, files):
+    def upload(self, files, config=None):
         """
         Upload given files to Filelib API
 
-        :param files: a list object that contains paths of files to be uploaded
-            files = [
-                (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/pyfile-1.pdf', 'rb')),
-                (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/test', 'rb')),
-                (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/10mb.jpg', 'rb')),
-                (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/nasa2.jpg', 'rb')),
-                (FORM_FIELD_FILE_NAME, open('/Users/musti/Downloads/samples/nasa3.tif', 'rb')),
-            ]
+        :param config: a dict that contains configuration options for the upload process
         :return:
         """
-        headers = {
-            'FILELIB_ACCESS_TOKEN': self.get_access_token()
-        }
-        data = {
-            'make_copy': False
-        }
+        self.set_headers('FILELIB_ACCESS_TOKEN', self.get_access_token())
+        self.__set_pool_config(config)
 
-        _files = [(FORM_FIELD_FILE_NAME, open(f_path)) for f_path in files]
-        req = requests.post(FILE_UPLOAD_URL, headers=headers, files=files, data=data)
-        if not req.ok:
-            raise FileUploadFailedException
+        self.set_files(files)
+        return self.__upload()
+
+    def __set_pool_config(self, config):
+        """
+        this is to be used internally by the Client class
+        :param config:
+        :return:
+        """
+        self.__config.update(config)
+
+    def set_config(self, key, value):
+        # TODO: ignore prohibited key, value alterations
+        self.__config[key] = value
+
+    def get_config(self):
+        return self.__config
+
+    def get_headers(self):
+        return self.__headers
+
+    def set_headers(self, key, value):
+        self.__headers[key] = value
+
+    def set_files(self, files: list):
+        assert type(files) is list, TypeError('files parameter must be a type list object')
+        for file in files:
+            self.add_file(file)
+
+    def add_file(self, file: str):
+        # Ensure type is string
+        assert type(file) is str, TypeError('files parameter must be a type list object')
+        # Ensure the path|file exists
+        if not os.path.isfile(file):
+            raise FileNotFoundError(FILE_DOES_NOT_EXIST.format(file))
+        self.__files.append(file)
+
+    def get_files(self):
+        return self.__files
+
+    def __prep_file_to_upload(self, file):
+        """
+        TODO: upload one file at a time if necessary (bigger than 10MB in size)
+
+        :param files: a list object that contains paths of files to be uploaded
+
+        :return:[
+                (FORM_FIELD_FILE_NAME, open('path_to_file/pyfile-1.pdf', 'rb')),
+                (FORM_FIELD_FILE_NAME, open('path_to_file/test', 'rb')),
+                (FORM_FIELD_FILE_NAME, open('path_to_file/10mb.jpg', 'rb')),
+                (FORM_FIELD_FILE_NAME, open('path_to_file/nasa2.jpg', 'rb')),
+                (FORM_FIELD_FILE_NAME, open('path_to_file/nasa3.tif', 'rb')),
+            ]
+        """
+
+        request_file_object = [(FORM_FIELD_FILE_NAME, open(file, 'rb'))]
+        return request_file_object
+
+    def __upload_file(self, file):
+        headers = self.get_headers()
+        config = self.get_config()
+        # files = [(FORM_FIELD_FILE_NAME, open(file, 'rb'))]
+        files = self.__prep_file_to_upload(file)
+        req = requests.post(FILE_UPLOAD_URL, headers=headers, files=files, data=config)
         json_response = json.loads(req.content)
+        if not req.ok:
+            raise FileUploadFailedException(json_response['error'])
         return json_response
 
+    def __upload(self):
+        """
+        Process files queued for uploading.
+        Also read one file at a time into memory
+        Send(POST|PUT) one file at a time
+
+        :return: Dict(JSON) response
+        """
+        # files = self.__pre_files_to_upload()
+        out = []
+        for file in self.get_files():
+            out.append(self.__upload_file(file))
+
+        return out

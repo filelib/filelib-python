@@ -7,7 +7,7 @@ with open('README.md') as f:
 
 setuptools.setup(
     name="filelibpy",
-    version="0.0.7",
+    version="0.0.71",
     scripts=["bin/filelib"],
     author="filelib",
     author_email="",
