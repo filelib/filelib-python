@@ -72,7 +72,7 @@ class Client:
     __headers = {}
     __files = []
 
-    def __init__(self, credentials_source='credentials_file', credentials_path='~/.filelib/credentials'):
+    def __init__(self, credentials_source='credentials_file', credentials_path='~/.filelib/credentials', **kwargs):
         assert credentials_source in CONFIG_CAPTURE_OPTIONS, UnsupportedCredentialsSourceException
         if credentials_source == 'credentials_file':
             if not os.path.isabs(credentials_path):
