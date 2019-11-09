@@ -17,6 +17,7 @@ if platform == "win32":
     import ntpath as os
 
 # FILELIB API ENDPOINTS
+# These values must be configurable for local dev testing
 AUTHENTICATION_URL = "http://localhost:9000/auth/"
 FILE_UPLOAD_URL = "http://localhost:9000/upload/"
 
@@ -41,6 +42,11 @@ class Client:
     """
     Organize Filelib API operations here
 
+    *** Do not assign API secret directly accessible.
+    *** Make the secret assigned in named-mangled property.
+
+    *** Requests to API endpoint for authentication(acquiring access_token) must not be initialized until upload is called
+    TODO: server region in endpoints.
     """
 
     # This property value is to be set by __init__
@@ -81,9 +87,10 @@ class Client:
             self._set_credentials_from_file()
         if credentials_source == 'environment_variable':
             self._set_credentials_from_env()
-        # ACQUIRE_ACCESS_TOKEN
-        if not self.is_access_token():
-            self.acquire_access_token()
+
+        # Check on config options and assign default values if empty
+        self.AUTHENTICATION_URL = kwargs.get('authentication_url', AUTHENTICATION_URL)
+        self.FILE_UPLOAD_URL = kwargs.get('file_upload_url', FILE_UPLOAD_URL)
 
     def is_access_token(self):
         """
@@ -134,7 +141,6 @@ class Client:
         """
 
         # Make a pseudo request temporarily to acquire access_token
-
         jwt_headers = {}
 
         jwt_payload = {
@@ -151,11 +157,10 @@ class Client:
             'Authorization': "Bearer {}".format(jwt_encoded.decode('utf-8'))
         }
 
-        response = requests.post(AUTHENTICATION_URL, headers=headers)
+        response = requests.post(self.AUTHENTICATION_URL, headers=headers)
         json_response = json.loads(response.content)
         assert response.ok, AcquiringAccessTokenFailedException(json_response.get('error', None))
 
-        # access_token_expiration = json_response.get('data', {}).get('expiration')
         self.__ACCESS_TOKEN = json_response.get('data', {}).get('access_token')
         access_token_expiration = json_response.get('data', {}).get('expiration')
         access_token_expiration_date = datetime.strptime(access_token_expiration, DATETIME_PRINT_FORMAT)
@@ -233,7 +238,7 @@ class Client:
         config = self.get_config()
         # files = [(FORM_FIELD_FILE_NAME, open(file, 'rb'))]
         files = self.__prep_file_to_upload(file)
-        req = requests.post(FILE_UPLOAD_URL, headers=headers, files=files, data=config)
+        req = requests.post(self.FILE_UPLOAD_URL, headers=headers, files=files, data=config)
         json_response = json.loads(req.content)
         if not req.ok:
             raise FileUploadFailedException(json_response['error'])
@@ -262,8 +267,15 @@ class Client:
         :param files: a list object of file paths to upload
         :return:
         """
-        self.__set_pool_config(config)
+        # Ensure the client is authenticated
+        # If not, authenticate with given parameters
+        # ACQUIRE_ACCESS_TOKEN
+        if not self.is_access_token():
+            self.acquire_access_token()
 
+        # Set config options for the request
+        self.__set_pool_config(config)
+        #
         self.set_files(files)
         return self.__upload()
 
