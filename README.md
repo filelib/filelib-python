@@ -39,3 +39,4 @@ FILELIB_API_SECRET={YOUR_API_SECRET}
 
 - [x] Allow to endpoint to be configurable to enable local dev testing
 - [x] Do not make any requests until upload is initiated
+- [ ] Implement Upload from file/path method.

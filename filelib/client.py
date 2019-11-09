@@ -2,6 +2,7 @@ import requests
 import json
 from configparser import ConfigParser
 import os
+import io
 from io import BufferedReader, TextIOWrapper
 from datetime import datetime
 import jwt
@@ -47,6 +48,13 @@ class Client:
 
     *** Requests to API endpoint for authentication(acquiring access_token) must not be initialized until upload is called
     TODO: server region in endpoints.
+
+
+    *** Before uploading a file from memory(file-like object)
+        1. Ensure given value is a file-like object
+            All streams are gonna be a extended by io.IOBase
+            i. `import io; isinstance(file_like_object, io.IOBase)`
+        2. Ensure the given stream(file-like object) is readable
     """
 
     # This property value is to be set by __init__
@@ -192,12 +200,7 @@ class Client:
         for file in files:
             self.add_file(file)
 
-    def add_file(self, file: str):
-        # Ensure type is string
-        assert type(file) is str, TypeError(FILES_PARAMETER_UNSUPPORTED_TYPE)
-        # Ensure the path|file exists
-        if not os.path.isfile(file):
-            raise FileNotFoundError(FILE_DOES_NOT_EXIST.format(file))
+    def add_file(self, file):
         self.__files.append(file)
 
     def get_files(self):
@@ -294,16 +297,21 @@ class Client:
         return self.__upload()
 
     def __add_file_like_object(self, fileobj):
-        # A file-like object must be readable in `rb`|binary mode|format
-        # If file-like object cannot be read in `rb` or converted to binary on the go,
-        # Raise error
-        assert hasattr(fileobj, 'readable'), "File-like object must have a readable method."
-        assert fileobj.readable(), "File-like object must must be readable."
-        if type(fileobj) == BufferedReader:
-            pass
-        elif type(fileobj) == TextIOWrapper:
-            if hasattr(fileobj, 'buffer'):
-                fileobj = fileobj.buffer
-            else:
-                raise FileUnsupportedReadModeException
-        self.__files.append(fileobj)
+        """
+        Ensure the file has passed through validation
+
+        :param fileobj:
+        :return:
+        """
+        # Ensure the file is an instance of io.IOBase
+
+        if not isinstance(fileobj, io.IOBase):
+            # Try to provide a name if available to help identify specific object.
+            raise AssertionError('Object provided is not a file-like object %s' % getattr(fileobj, 'name', ''))
+
+        if not hasattr(fileobj, 'readable'):
+            raise AssertionError("File-like object must have a readable method.")
+
+        if not fileobj.readable():
+            raise AssertionError("File-like object must be readable.")
+        self.add_file(fileobj)
