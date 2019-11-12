@@ -55,6 +55,9 @@ class Client:
             All streams are gonna be a extended by io.IOBase
             i. `import io; isinstance(file_like_object, io.IOBase)`
         2. Ensure the given stream(file-like object) is readable
+
+    *** Allow upload of a single file per scope only.
+
     """
 
     # This property value is to be set by __init__
@@ -84,7 +87,8 @@ class Client:
         'make_copy': False
     }
     __headers = {}
-    __files = []
+    # Handle one file at a time
+    __file = None
 
     def __init__(self, credentials_source='credentials_file', credentials_path='~/.filelib/credentials', **kwargs):
         assert credentials_source in CONFIG_CAPTURE_OPTIONS, UnsupportedCredentialsSourceException
@@ -195,16 +199,21 @@ class Client:
     def set_headers(self, key, value):
         self.__headers[key] = value
 
-    def set_files(self, files: list):
-        assert type(files) is list, TypeError(FILES_PARAMETER_UNSUPPORTED_TYPE)
-        for file in files:
-            self.add_file(file)
+    def set_file(self, file):
+        if type(file) is str:
+            pass
+        elif isinstance(file, io.IOBase):
+            pass
+        else:
+            raise TypeError(FILES_PARAMETER_UNSUPPORTED_TYPE)
+        # Assign file to Client
+        self.__add_file(file)
 
-    def add_file(self, file):
-        self.__files.append(file)
+    def __add_file(self, file):
+        self.__file = file
 
-    def get_files(self):
-        return self.__files
+    def get_file(self):
+        return self.__file
 
     def __prep_file_to_upload(self, file):
         """
@@ -213,13 +222,8 @@ class Client:
         https://2.python-requests.org/en/master/user/quickstart/#post-a-multipart-encoded-file
         :param file: str -> Path to the file that will be uploaded.
 
-        :return:[
-                (FORM_FIELD_FILE_NAME, open('path_to_file/pyfile-1.pdf', 'rb')),
-                (FORM_FIELD_FILE_NAME, open('path_to_file/test', 'rb')),
-                (FORM_FIELD_FILE_NAME, open('path_to_file/10mb.jpg', 'rb')),
-                (FORM_FIELD_FILE_NAME, open('path_to_file/nasa2.jpg', 'rb')),
-                (FORM_FIELD_FILE_NAME, open('path_to_file/nasa3.tif', 'rb')),
-            ]
+        :return: (FORM_FIELD_FILE_NAME, open('path_to_file/pyfile-1.pdf', 'rb')) : tuple
+
         """
         if type(file) is str:
             content = open(file, 'rb')
@@ -230,6 +234,7 @@ class Client:
         file_name = os.path.basename(file_name)
         if not file_name:
             file_name = str(uuid4())
+        # {'file': ('report.xls', open('report.xls', 'rb'), 'application/vnd.ms-excel', {'Expires': '0'})}
         request_file_object = [(FORM_FIELD_FILE_NAME, (file_name, content))]
         return request_file_object
 
@@ -249,25 +254,18 @@ class Client:
 
     def __upload(self):
         """
-        Process files queued for uploading.
-        Also read one file at a time into memory
-        Send(POST|PUT) one file at a time
-
-        :return: Dict(JSON) response
+        Return the file assigned for upload
         """
-        # files = self.__pre_files_to_upload()
-        out = []
-        for file in self.get_files():
-            out.append(self.__upload_file(file))
 
-        return out
+        file = self.get_file()
+        return self.__upload_file(file)
 
-    def upload(self, files, config=None):
+    def upload(self, file, config=None):
         """
         Upload given files to Filelib API
 
         :param config: a dict that contains configuration options for the upload process
-        :param files: a list object of file paths to upload
+        :param file: a file-like-object or path to a file to upload
         :return:
         """
         # Ensure the client is authenticated
@@ -279,19 +277,19 @@ class Client:
         # Set config options for the request
         self.__set_pool_config(config)
         #
-        self.set_files(files)
+        self.set_file(file)
         return self.__upload()
 
-    def upload_file_objects(self, files, config=None):
+    def upload_file_object(self, file, config=None):
         """
         Upload file-like objects.
         This method allows client to upload a file that is already in memory
-        :param files: Type list object with file-like object items
+        :param file: Type list object with file-like object items
         :param config: a dict that contains configuration options for the upload process
         :return: self.__upload()
         """
-        for file in files:
-            self.__add_file_like_object(file)
+
+        self.__add_file_like_object(file)
         for key, value in config.items():
             self.set_config(key, value)
         return self.__upload()
@@ -314,4 +312,19 @@ class Client:
 
         if not fileobj.readable():
             raise AssertionError("File-like object must be readable.")
-        self.add_file(fileobj)
+        self.__add_file(fileobj)
+
+    def upload_from_path(self, path, config=None):
+        """
+        Upload file at given path
+        :param path: path to file to be uploaded | string
+        :param config: configuration options for the upload | dict|None
+        :return: self.upload(**)
+        """
+        # Ensure the path is a string and the path is a valid destination of file.
+        if type(path) is not str:
+            raise ValueError(PATH_MUST_STRING)
+        if not os.path.isfile(path):
+            raise FileNotFoundError(FILE_DOES_NOT_EXIST)
+        # TODO: assign config options
+        return self.upload(file=path, config=config)
