@@ -39,4 +39,53 @@ FILELIB_API_SECRET={YOUR_API_SECRET}
 
 - [x] Allow to endpoint to be configurable to enable local dev testing
 - [x] Do not make any requests until upload is initiated
-- [ ] Implement Upload from file/path method.
+- [x] Implement Upload from file/path method.
+- [x] Separate authentication into its own scope. Inject into `Client`
+- [x] Remove duplicate upload process handlers from Client.
+- [ ] Add config option references.
+
+
+### Library Authenticator  
+Authentication handling will be done in its own scope, separate class that manages authentication processes.
+
+
+### Upload process within Client
+
+Upload process needs to be as readable and lesser lines as possible.
+```python
+from filelib import Client
+
+client = Client()
+file = 'path_to_local_file'
+
+# TODO: add reference to config options
+configs = {}
+
+upload = client.upload(file=file, config=configs)
+
+# Or as the following for file-like object uploads 
+# with open('path_to_file', 'rb') as f:
+#    upload = client.upload(file=f, config=configs)
+```
+
+`Client.upload(file, config)`  
+this method accepts two parameters  
+1. `file`:  
+   `file: type in {str|io.IOBase}`  
+   `file` parameter can be of 2 types  
+   1. it can be a string which is a path of a local file to be uploaded.  
+   2. it can be a file-like object which is equivalent to `open('file', mode='rb')`  
+2. `config`:
+    `config: type dict| None`  
+    `config` parameter can be of 2 types  
+    1. It can be `None` is all default config options to be used.  
+    2. It can be a dictionery that container config value options at Consumers discretion.    
+        ```python
+        config = {
+           'prefix': 'mysubpath'
+        }
+        ```
+
+       
+       
+ 
