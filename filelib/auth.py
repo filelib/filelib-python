@@ -94,7 +94,10 @@ class Authenticator:
         """
 
         # Make a pseudo request temporarily to acquire access_token
-        jwt_headers = {}
+        jwt_headers = {
+          "alg": "HS256",
+          "typ": "JWT"
+        }
 
         jwt_payload = {
             "filelib_api_key": self.__FILELIB_API_KEY,
