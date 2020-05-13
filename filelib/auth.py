@@ -5,21 +5,19 @@ This class instance will be injected into `client.Client`
 
 """
 
+import json
+import os
 from configparser import ConfigParser
 from datetime import datetime
-from .errors import *
-from .exceptions import *
-import json
+
 import jwt
 import pytz
-import os
 import requests
-from .utils import (
-    REQUEST_CLIENT_SOURCE,
-    DATETIME_PRINT_FORMAT,
-    AUTHENTICATION_URL,
-    CONFIG_CAPTURE_OPTIONS
-)
+
+from .errors import *
+from .exceptions import *
+from .utils import (AUTHENTICATION_URL, CONFIG_CAPTURE_OPTIONS,
+                    DATETIME_PRINT_FORMAT, REQUEST_CLIENT_SOURCE)
 
 
 class Authenticator:
