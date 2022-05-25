@@ -18,7 +18,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "requests==2.21.0",
-        "PyJWT==1.7.1",
+        "PyJWT==2.4.0",
         "pytz==2019.1"
     ],
     python_requires=">=3.5",
