@@ -17,7 +17,7 @@ setuptools.setup(
     url="https://github.com/filelib/filelib-python",
     packages=setuptools.find_packages(),
     install_requires=[
-        "requests==2.21.0",
+        "requests==2.31.0",
         "PyJWT==1.7.1",
         "pytz==2019.1"
     ],
