@@ -39,6 +39,7 @@ filelib = "filelib.cli.entrypoint:filelib_cli"
 [project.optional-dependencies]
 dev = [
     "flake8~=6.1",
+    "isort==5.12.0",
     "ipython~=8.12",
     "pytest==7.4.3",
     "twine==4.0.2",
