@@ -82,13 +82,12 @@ class Authentication:
         config.read(self.path)
         if not config.has_section(CREDENTIALS_FILE_SECTION_NAME):
             raise MissingCredentialSectionError
-        if not config.get(CREDENTIALS_FILE_SECTION_NAME, CREDENTIALS_FILE_SECTION_API_KEY):
+        if CREDENTIALS_FILE_SECTION_API_KEY not in config[CREDENTIALS_FILE_SECTION_NAME]:
             raise CredentialSectionFilelibAPIKeyMissingException(
                 "Credential file %s missing key : %s"
                 % (CREDENTIALS_FILE_SECTION_NAME, CREDENTIALS_FILE_SECTION_API_KEY))
         self.__API_KEY = config.get(CREDENTIALS_FILE_SECTION_NAME, CREDENTIALS_FILE_SECTION_API_KEY)
-
-        if not config.get(CREDENTIALS_FILE_SECTION_NAME, CREDENTIALS_FILE_SECTION_API_SECRET):
+        if CREDENTIALS_FILE_SECTION_API_SECRET not in config[CREDENTIALS_FILE_SECTION_NAME]:
             raise CredentialSectionFilelibAPIKeyMissingException(
                 "Credential file %s missing key : %s"
                 % (CREDENTIALS_FILE_SECTION_NAME, CREDENTIALS_FILE_SECTION_API_SECRET))
@@ -102,11 +101,11 @@ class Authentication:
         key = os.environ.get(ENV_API_KEY_IDENTIFIER, None)
         secret = os.environ.get(ENV_API_SECRET_IDENTIFIER, None)
         if not key:
-            CredEnvKeyValueMissingError(
+            raise CredEnvKeyValueMissingError(
                 "Environment variables %s does not exist or missing value" % ENV_API_KEY_IDENTIFIER
             )
         if not secret:
-            CredEnvKeyValueMissingError(
+            raise CredEnvKeyValueMissingError(
                 "Environment variables %s does not exist or missing value" % ENV_API_SECRET_IDENTIFIER
             )
 

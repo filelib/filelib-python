@@ -15,7 +15,7 @@ class FilelibBaseException(Exception):
         self.message = message if message else getattr(self, "message", None)
         self.code = code if code else getattr(self, "code", None)
         self.error_code = error_code if error_code else getattr(self, "error_code", None)
-        super().__init__(self.message, self.code, self.error_code)
+        super().__init__(self.message)
 
 
 class ConfigPrefixInvalidError(FilelibBaseException):
