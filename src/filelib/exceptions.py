@@ -99,6 +99,54 @@ class AcquiringAccessTokenFailedError(FilelibBaseException):
     error_code = "ACCESS_TOKEN_ACQUISITION_FAILURE"
 
 
+class FileDoesNotExistError(FilelibBaseException):
+    """
+    Raised when a given path is not a file
+    """
+    message = "File at given path does not exist"
+    code = 404
+    error_code = "FILE_DOES_NOT_EXIST"
+
+
+class FileObjectNotReadableError(FilelibBaseException):
+    """
+    Raised when a given file object is not readable.
+    """
+    message = "File object is not readable."
+    code = 400
+    error_code = "FILE_OBJECT_NOT_READABLE"
+
+
+class FileNameRequiredError(FilelibBaseException):
+    """
+    Raised when a file object does not have a name.
+    """
+    message = "File object does not have a name."
+    code = 400
+    error_code = "FILE_OBJECT_DOES_NOT_HAVE_NAME"
+
+
+class FileNotSeekeableError(FilelibBaseException):
+    """
+    Raised when a file object cannot be seeked.
+    no `seek` method
+    or no `seekable` or `seekable` method returned False.
+    """
+    message = "File object is not seekable."
+    code = 400
+    error_code = "FILE_OBJECT_NO_SEEKABLE"
+
+
+
+class AccessToFileDeniedError(FilelibBaseException):
+    """
+    Raised when a given a file at given path cannot be read due to permissions.
+    """
+    message = "Filelib/python does not have access to file at given path"
+    code = 404
+    error_code = "FILE_PERMISSION_DENIED"
+
+
 class FileUploadFailedException(FilelibBaseException):
     """
     Raised when request to upload files fails.
