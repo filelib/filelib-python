@@ -9,6 +9,7 @@ import pytz
 
 from filelib.constants import (
     AUTHENTICATION_URL,
+    AUTHORIZATION_HEADER,
     CREDENTIAL_CAPTURE_OPTIONS,
     CREDENTIAL_SOURCE_OPTION_FILE,
     CREDENTIALS_FILE_SECTION_API_KEY,
@@ -168,3 +169,10 @@ class Authentication:
                 raise AcquiringAccessTokenFailedError(message=response['error'])
             self.__ACCESS_TOKEN = response["data"]["access_token"]
             self.__ACCESS_TOKEN_EXPIRATION = datetime.strptime(response["data"]["expiration"], DATETIME_PRINT_FORMAT)
+
+    def to_headers(self):
+        if not self.is_access_token():
+            self.acquire_access_token()
+        return {
+            AUTHORIZATION_HEADER: "Bearer {}".format(self.get_access_token())
+        }

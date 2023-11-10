@@ -5,4 +5,5 @@ filelibpy.egg-info
 __pycache__
 *.pyc
 .DS_Store
-examples/*.txt
+examples/media/*
+!examples/media/README.md

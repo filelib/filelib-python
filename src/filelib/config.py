@@ -1,5 +1,10 @@
 import string
 
+from filelib.constants import (
+    CONFIG_ACCESS_HEADER,
+    CONFIG_PREFIX_HEADER,
+    CONFIG_STORAGE_HEADER
+)
 from filelib.exceptions import ConfigPrefixInvalidError, ConfigValidationError
 
 
@@ -38,3 +43,13 @@ class FilelibConfig:
         if type(self.access) is not str:
             raise ConfigValidationError("`access` config option must be a string.")
         return True
+
+    def to_headers(self):
+        """
+        Generate headers from provided values for Filelib API
+        """
+        return {
+            CONFIG_STORAGE_HEADER: self.storage,
+            CONFIG_PREFIX_HEADER: self.prefix,
+            CONFIG_ACCESS_HEADER: self.access
+        }

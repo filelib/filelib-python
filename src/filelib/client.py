@@ -1,19 +1,13 @@
-import os
-import time
-from random import randint
-from sys import platform
 import concurrent.futures
-from multiprocessing import RawValue
+import os
+
+from jmcache import Cache as FileCacheManager
+
 from filelib.config import FilelibConfig
 
 from .authentication import Authentication
-from .cache.file_cache_manager import FileCacheManager
 from .constants import CREDENTIAL_SOURCE_OPTION_FILE
-from .exceptions import *
 from .upload_manager import UploadManager
-
-if platform == "win32":
-    import ntpath as os
 
 
 # This is to allow access to added files within a multiprocess
@@ -67,7 +61,13 @@ class Client:
             config = self.config
         if not config:
             raise TypeError("`config` must be provided.")
-        _file_indexes.files[len(_file_indexes.files)] = (UploadManager(file=file, config=config, file_name=file_name, workers=workers))
+        _file_indexes.files[len(_file_indexes.files)] = (UploadManager(
+            file=file,
+            auth=self.auth,
+            config=config,
+            file_name=file_name,
+            workers=workers
+        ))
 
     def get_files(self):
         return _file_indexes.files

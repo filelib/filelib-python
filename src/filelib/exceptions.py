@@ -126,7 +126,7 @@ class FileNameRequiredError(FilelibBaseException):
     error_code = "FILE_OBJECT_DOES_NOT_HAVE_NAME"
 
 
-class FileNotSeekeableError(FilelibBaseException):
+class FileNotSeekableError(FilelibBaseException):
     """
     Raised when a file object cannot be seeked.
     no `seek` method
@@ -135,7 +135,6 @@ class FileNotSeekeableError(FilelibBaseException):
     message = "File object is not seekable."
     code = 400
     error_code = "FILE_OBJECT_NO_SEEKABLE"
-
 
 
 class AccessToFileDeniedError(FilelibBaseException):
@@ -147,10 +146,13 @@ class AccessToFileDeniedError(FilelibBaseException):
     error_code = "FILE_PERMISSION_DENIED"
 
 
-class FileUploadFailedException(FilelibBaseException):
+class FilelibAPIException(FilelibBaseException):
     """
-    Raised when request to upload files fails.
+    Raised when request to Filelib API returns error.
     """
+    message = "Filelib API responded with error."
+    code = 500
+    error_code = "FILELIB_API_ERROR"
 
 
 class FileUnsupportedReadModeException(FilelibBaseException):
