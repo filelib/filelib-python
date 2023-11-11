@@ -1,6 +1,4 @@
-import io
-
-from filelib import Authentication, Client, FilelibConfig, UploadManager
+from filelib import Client, FilelibConfig
 
 try:
     # auth = Authentication(source="credentials_file", path="./credentials")
@@ -22,6 +20,6 @@ try:
     client.add_file(file=file, config=config)
     client.upload(multiprocess=True)
 
-except Exception as e:
+except Exception:
     import traceback
     traceback.print_exc()
