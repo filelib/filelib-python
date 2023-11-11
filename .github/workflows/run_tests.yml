@@ -18,3 +18,11 @@ jobs:
       run : docker exec py38 flake8
     - name: Run Pytest on Python 3.8
       run: docker exec py38 pytest --disable-warnings
+    - name: Run Pytest on Python 3.9
+      run: docker exec py39 pytest --disable-warnings
+    - name: Run Pytest on Python 3.10
+      run: docker exec py310 pytest --disable-warnings
+    - name: Run Pytest on Python 3.11
+      run: docker exec py311 pytest --disable-warnings
+    - name: Run Pytest on Python 3.12
+      run: docker exec py312 pytest --disable-warnings
