@@ -5,6 +5,7 @@ import zlib
 
 import httpx
 from jmcache import Cache
+from tqdm import tqdm
 
 from . import Authentication
 from .config import FilelibConfig
@@ -58,7 +59,8 @@ class UploadManager:
             file_name=None,
             cache=None,
             multithreading=False,
-            workers: int = 4
+            workers: int = 4,
+            ignore_cache=False
     ):
         self.file_name = file_name
         self.file = self._process_file(file)
@@ -67,6 +69,8 @@ class UploadManager:
         self.multithreading = True
         self.workers = workers
         self.processed = False
+        # Allow the user to start over an upload from scratch
+        self.ignore_cache = ignore_cache
         self.cache = cache or Cache(namespace=str(self.get_cache_namespace()), path="./subdir")
 
     def _process_file(self, file):
@@ -103,12 +107,19 @@ class UploadManager:
         return file
 
     def has_cache(self):
+        # `ignore_cache` setting must return false.
+        if self.ignore_cache:
+            return False
         return self.cache.get(self._CACHE_LOCATION_KEY) is not None
 
     def get_cache(self, key):
+        if self.ignore_cache:
+            return False
         return self.cache.get(key)
 
     def set_cache(self, key, value):
+        if self.ignore_cache:
+            return False
         self.cache.set(key, value)
 
     def get_cache_namespace(self):
@@ -220,6 +231,7 @@ class UploadManager:
             self.cache.set(self._CACHE_LOCATION_KEY, self._FILE_UPLOAD_URL)
 
     def _upload_chunk(self, part_number):
+
         chunk = self._get_chunk(part_number)
         headers = self.auth.to_headers()
         headers[UPLOAD_PART_CHUNK_NUM_HEADER] = str(part_number)
@@ -233,9 +245,14 @@ class UploadManager:
                 )
 
     def single_thread_upload(self):
+        parts = sorted(list(self._UPLOAD_PART_NUMBER_SET))
+        pbar = tqdm(desc=self.file_name, total=len(parts))
         self._FILE_UPLOAD_STATUS = UPLOAD_STARTED
-        for _part_number in self._UPLOAD_PART_NUMBER_SET:
+        # for _part_number in self._UPLOAD_PART_NUMBER_SET:
+        for _part_number in parts:
             self._upload_chunk(_part_number)
+            pbar.update(_part_number)
+        pbar.close()
         self._FILE_UPLOAD_STATUS = UPLOAD_COMPLETED
 
     def multithread_upload(self):
@@ -243,6 +260,10 @@ class UploadManager:
 
         # Upload the highest part number last(out of multithread) so server can decide to mark file completed.
         part_nums = list(self._UPLOAD_PART_NUMBER_SET)
+        if not part_nums:
+
+            print("Nothing to upload.", part_nums)
+            return
         last_part_number = max(part_nums)
         part_nums.remove(last_part_number)
 
@@ -254,18 +275,21 @@ class UploadManager:
             Multithreading worker requires at least one worker or it must be None.
             Worker value provided: %d
             """ % workers)
+        print("WORKER COUNT", workers)
+        print("UPLAODING PARTS", part_nums)
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             # Start the load operations and mark each future with its URL
-            _pn_chunk = {pn: executor.submit(self._upload_chunk, pn) for pn in part_nums}
+            _pn_chunk = {executor.submit(self._upload_chunk, pn): pn for pn in part_nums}
             for _processed_chunk in concurrent.futures.as_completed(_pn_chunk):
+                completed_part_number = _pn_chunk[_processed_chunk]
+
                 print("PROCESSED CHUNK", _pn_chunk[_processed_chunk])
-                # part_num = _processed_chunk[future]
-                # try:
-                #     data = future.result()
-                # except Exception as exc:
-                #     print('%r generated an exception: %s' % (url, exc))
-                # else:
-                #     print('%r page is %d bytes' % (url, len(data)))
+                try:
+                    data = _processed_chunk.result()
+                except Exception as exc:
+                    print('Uploading %d failed with: %s' % (completed_part_number, exc))
+                else:
+                    print('Successfully uploaded part: %d with result: %s' % (completed_part_number, data))
         self._upload_chunk(last_part_number)
         self._FILE_UPLOAD_STATUS = UPLOAD_COMPLETED
 
@@ -274,10 +298,10 @@ class UploadManager:
         Upload file object to Filelib API
         """
         self._initialize_upload()
-        print("Uploading %d part numbers" % self.calculate_part_count())
+        # print("Uploading %d part numbers" % self.calculate_part_count())
         print("UPLOAD SIZE", self.UPLOAD_CHUNK_SIZE)
-        print("PART NUMBERS TO UPLOAD", self._UPLOAD_PART_NUMBER_SET)
+        # print("PART NUMBERS TO UPLOAD", self._UPLOAD_PART_NUMBER_SET)
 
-        if self.multithreading:
-            return self.multithread_upload()
+        # if self.multithreading:
+        #     return self.multithread_upload()
         return self.single_thread_upload()

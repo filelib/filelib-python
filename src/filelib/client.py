@@ -56,7 +56,7 @@ class Client:
         self.auth = Authentication(source=credentials_source, path=credentials_path)
         self.config = FilelibConfig(storage=storage, prefix=prefix, access=access)
 
-    def add_file(self, file, config=None, file_name=None, workers=4):
+    def add_file(self, file, config=None, file_name=None, workers=4, ignore_cache=False):
         if not config:
             config = self.config
         if not config:
@@ -66,7 +66,8 @@ class Client:
             auth=self.auth,
             config=config,
             file_name=file_name,
-            workers=workers
+            workers=workers,
+            ignore_cache=ignore_cache
         ))
 
     def get_files(self):

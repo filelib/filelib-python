@@ -1,5 +1,20 @@
 # filelib-python
-Offical python pip package for Filelib API
+Official python package for Filelib API
+
+### Installation
+
+`pip install filelibpy`
+
+This will install the library to your python environment.
+
+This will also create a command that you can use in your terminal via `filelib`
+
+##  Utilizing Filelib Python library
+
+`filelibpy` provides multiple components that allows you to customize your integration.
+
+
+
 
 ### Acquiring Access Token
 Access_token must be present in the request headers to be allowed to reach API endpoints

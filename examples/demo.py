@@ -17,8 +17,8 @@ try:
     # for i in range(20):
     #     client.add_file(file=file, config=config, file_name="%d - %s" % (i, file.name))
 
-    client.add_file(file=file, config=config)
-    client.upload(multiprocess=True)
+    client.add_file(file=file, config=config, ignore_cache=True)
+    client.upload(multiprocess=False)
 
 except Exception:
     import traceback
