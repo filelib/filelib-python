@@ -1,0 +1,20 @@
+name: Filelib Style And UnitTests
+
+on:
+  pull_request:
+    branches: [ "master" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: docker compose -f docker/docker-compose.yml up -d
+    - name: Check running containers
+      run: docker ps -a
+    - name: isort Python Imports
+      run: docker exec py38 isort . -m 3 --check
+    - name: PEP8 Check
+      run : docker exec py38 flake8
+    - name: Run Pytest on Python 3.8
+      run: docker exec py38 pytest --disable-warnings
