@@ -1,0 +1,48 @@
+version: '3.7'
+
+services:
+
+  py38:
+    restart: unless-stopped
+    container_name: py38
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: py38
+    command: tail -F i_am_a_tea_pot
+
+  py39:
+    restart: unless-stopped
+    container_name: py39
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: py39
+    command: tail -F i_am_a_tea_pot
+
+  py310:
+    restart: unless-stopped
+    container_name: py310
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: py310
+    command: tail -F i_am_a_tea_pot
+
+  py311:
+    restart: unless-stopped
+    container_name: py311
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: py311
+    command: tail -F i_am_a_tea_pot
+
+  py312:
+    restart: unless-stopped
+    container_name: py312
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: py312
+    command: tail -F i_am_a_tea_pot
