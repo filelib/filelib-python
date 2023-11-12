@@ -5,7 +5,6 @@ import zlib
 
 import httpx
 from jmstorage import Cache
-from tqdm import tqdm
 
 from . import Authentication
 from .config import FilelibConfig
@@ -245,14 +244,9 @@ class UploadManager:
                 )
 
     def single_thread_upload(self):
-        parts = sorted(list(self._UPLOAD_PART_NUMBER_SET))
-        pbar = tqdm(desc=self.file_name, total=len(parts))
         self._FILE_UPLOAD_STATUS = UPLOAD_STARTED
-        # for _part_number in self._UPLOAD_PART_NUMBER_SET:
-        for _part_number in parts:
+        for _part_number in self._UPLOAD_PART_NUMBER_SET:
             self._upload_chunk(_part_number)
-            pbar.update(_part_number)
-        pbar.close()
         self._FILE_UPLOAD_STATUS = UPLOAD_COMPLETED
 
     def multithread_upload(self):
