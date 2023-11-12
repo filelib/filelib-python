@@ -17,15 +17,15 @@ copyright: Filelib &copy; 2023
 theme:
   name: material
   logo: assets/filelib-logo.png
-#  custom_dir: material/overrides
+
   features:
     - announce.dismiss
-    - content.action.edit
+#    - content.action.edit
     - content.action.view
     - content.code.annotate
     - content.code.copy
-    # - content.code.select
-    # - content.tabs.link
+    - content.code.select
+    - content.tabs.link
     - content.tooltips
     # - header.autohide
     # - navigation.expand
@@ -46,18 +46,10 @@ theme:
     - toc.follow
     # - toc.integrate
   palette:
-    - scheme: default
-      primary: black
-      accent: black
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
     - scheme: slate
       primary: black
       accent: black
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
+
   font:
     text: Roboto
     code: Roboto Mono
@@ -67,11 +59,8 @@ theme:
 
 # Plugins
 plugins:
-  - blog
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
-#  - minify:
-#      minify_html: true
 
 # Additional configuration
 extra:
@@ -139,5 +128,7 @@ nav:
   - Home: index.md
   - Getting Started:
       - Installation: getting_started/installation.md
+      - Authentication: getting_started/authentication.md
+      - Storage Configuration: getting_started/storage_configuration.md
   - Usage:
       - Client: usage/client.md

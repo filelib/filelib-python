@@ -1,7 +1,7 @@
 import concurrent.futures
 import os
 
-from jmcache import Cache as FileCacheManager
+from jmstorage import Cache as FileCacheManager
 
 from filelib.config import FilelibConfig
 

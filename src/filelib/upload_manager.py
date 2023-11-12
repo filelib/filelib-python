@@ -4,7 +4,7 @@ import os.path
 import zlib
 
 import httpx
-from jmcache import Cache
+from jmstorage import Cache
 from tqdm import tqdm
 
 from . import Authentication

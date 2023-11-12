@@ -11,17 +11,12 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://filelib.com/getting_started/</loc>
+         <loc>https://filelib.com/getting_started/authentication/</loc>
          <lastmod>2023-11-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://filelib.com/getting_started/installation/</loc>
-         <lastmod>2023-11-12</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://filelib.com/home/</loc>
          <lastmod>2023-11-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
