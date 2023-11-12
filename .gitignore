@@ -1,9 +1,0 @@
-.idea
-dist
-build
-filelibpy.egg-info
-__pycache__
-*.pyc
-.DS_Store
-examples/media/*
-!examples/media/README.md
