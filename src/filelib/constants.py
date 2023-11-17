@@ -17,6 +17,8 @@ CREDENTIAL_CAPTURE_OPTIONS = [
     CREDENTIAL_SOURCE_OPTION_FILE
 ]
 
+FILE_OPEN_MODE = "rb"
+
 CREDENTIALS_FILE_SECTION_NAME = 'filelib'
 CREDENTIALS_FILE_SECTION_API_KEY = 'api_key'
 CREDENTIALS_FILE_SECTION_API_SECRET = 'api_secret'
@@ -38,6 +40,9 @@ UPLOAD_PART_CHUNK_NUM_HEADER = "Filelib-Upload-Part-Chunk-Number"
 UPLOAD_CHUNK_SIZE_HEADER = "Filelib-Upload-Chunk-Size"
 UPLOAD_LOCATION_HEADER = "Location"
 FILE_UPLOAD_STATUS_HEADER = "Filelib-File-Upload-Status"
+# Error Headers
+ERROR_MESSAGE_HEADER = "Filelib-Error-Message"
+ERROR_CODE_HEADER = "Filelib-Error-Code"
 
 # FILE STATUS; Ref: FILE_UPLOAD_STATUS_HEADER
 UPLOAD_PENDING = "pending"  # Initialized but no parts are sent

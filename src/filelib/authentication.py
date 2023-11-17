@@ -150,7 +150,7 @@ class Authentication:
         make a POST request to AUTHENTICATION_URL to acquire an access_token
         :return: None
         """
-
+        print("ACQUIRING ACCESS TOKEN")
         jwt_payload = self._access_token_payload()
         jwt_encoded = jwt.encode(
             payload=jwt_payload,

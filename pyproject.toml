@@ -12,7 +12,7 @@ dependencies = [
     "httpx~=0.25",
     "jmstorage~=0.0",
     "PyJWT~=2.8",
-    "pytz~=2019.1"
+    "pytz>=2019.1,<2023.1"
 ]
 license = { file = "LICENSE" }
 authors = [{ name = "JustinMusti" }]

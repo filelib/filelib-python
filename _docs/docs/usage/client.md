@@ -1,8 +1,10 @@
 # Filelib Client
 
-After the going through the installation process, you can start using the components within the library.
+`Client` object is an orchestrator of putting necessary components together that allows you 
+to write less code. 
 
-Please ensure you acquired your API Credentials for [Authentication](/getting_started/authentication/)
+Please ensure you acquired your API Credentials for [Authentication](../getting_started/authentication.md) before 
+using the `Client`
 
 ## Client
 
@@ -15,7 +17,7 @@ from filelib import Client
 
 
 Client object will automatically try to authenticate for you.  
-There are 3 ways you can authenticate
+There are 2 ways you can authenticate
 
 
 
@@ -40,9 +42,6 @@ There are 3 ways you can authenticate
         from filelib import Client
         
         client = Client(
-                source="storage_ref",  # storage configuration reference name.
-                prefix="my_dir/"  # This will be added to the beginning of your file name during storage
-                access="private"  # Depending what service you are using to store your files, you can set the visibility.
                 credentials_source="file", 
                 credentials_path="~/.filelib/credentials"  # path the your configuration file
         )
@@ -67,12 +66,7 @@ There are 3 ways you can authenticate
         ``` python
         from filelib import Client
         
-        client = Client(
-                source="storage_ref",  # storage configuration reference name.
-                prefix="my_dir/"  # This will be added to the beginning of your file name during storage
-                access="private"  # Depending what service you are using to store your files, you can set the visibility.
-                credentials_source="env"
-        )
+        client = Client(credentials_source="env")
         ```
 
 ## Adding files for upload
@@ -85,7 +79,7 @@ After you initialize `Client`, now you can add files to be uploaded by chunks.
     from filelib import Client
     
     
-    client = Client(storage="storage_ref")
+    client = Client()
     # Open file
     file = open("~/Downloads/birthday.mp4", "rb")
     client.add_file(file)  # this will add file to be uploaded but will not read it.
@@ -100,7 +94,7 @@ After you initialize `Client`, now you can add files to be uploaded by chunks.
     from filelib import Client, FilelibConfig
     
     
-    client = Client(storage="storage_ref")
+    client = Client()
     # Open file
     file = open("~/Downloads/birthday.mp4", "rb")
     config = FilelibConfig(storage="storage_ref", prefix="file_prefix", access="file_access")

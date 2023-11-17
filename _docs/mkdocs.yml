@@ -37,7 +37,7 @@ theme:
     # - navigation.prune
     - navigation.sections
     - navigation.tabs
-    # - navigation.tabs.sticky
+    - navigation.tabs.sticky
     - navigation.top
     - navigation.tracking
     - search.highlight
@@ -49,7 +49,15 @@ theme:
     - scheme: slate
       primary: black
       accent: black
-
+#      toggle:
+#        icon: material/brightness-7
+#        name: Switch to dark mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+#      toggle:
+#        icon: material/brightness-4
+#        name: Switch to light mode
   font:
     text: Roboto
     code: Roboto Mono
@@ -66,7 +74,6 @@ plugins:
 extra:
   annotate:
     json: [.s2]
-
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/filelib
@@ -98,16 +105,8 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.keys
-  - pymdownx.magiclink:
-      normalize_issue_symbols: true
-      repo_url_shorthand: true
-      user: squidfunk
-      repo: mkdocs-material
   - pymdownx.mark
   - pymdownx.smartsymbols
-  - pymdownx.snippets:
-      auto_append:
-        - includes/mkdocs.md
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid

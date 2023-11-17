@@ -155,7 +155,10 @@ class FilelibAPIException(FilelibBaseException):
     error_code = "FILELIB_API_ERROR"
 
 
-class FileUnsupportedReadModeException(FilelibBaseException):
+class NoChunksToUpload(FilelibBaseException):
     """
-    Raised when file-like object cannot be read in binary mode.
+    Raised when
     """
+    message = "No chunks to upload for given file."
+    code = 400
+    error_code = "NO_CHUNKS_TO_UPLOAD"
