@@ -64,9 +64,10 @@ class UploadManager:
         self.file_name, self.file = self.process_file(file_name, file)
         self.config = config
         self.auth = auth
+        print("IS IT MOCK", self.auth.is_access_token)
+        print("IS IT TRUE", self.auth.is_access_token())
         self.multithreading = multithreading
         self.workers = workers
-        self.processed = False
         # Allow the user to start over an upload from scratch
         self.ignore_cache = ignore_cache
         self.cache = cache or Cache(namespace=str(self.get_cache_namespace()), path="./subdir")
@@ -83,7 +84,6 @@ class UploadManager:
     def has_cache(self):
         # `ignore_cache` setting must return false.
         if self.ignore_cache:
-            print("Ignoreing cache", self.ignore_cache)
             return False
         return self.cache.get(self._CACHE_LOCATION_KEY) is not None
 
@@ -182,12 +182,12 @@ class UploadManager:
                 self._UPLOAD_PART_NUMBER_SET.update(rest)
 
         if method.lower() == "post":
-            self.MAX_CHUNK_SIZE = headers.get(UPLOAD_MAX_CHUNK_SIZE_HEADER, self.MAX_CHUNK_SIZE)
-            self.MIN_CHUNK_SIZE = headers.get(UPLOAD_MIN_CHUNK_SIZE_HEADER, self.MIN_CHUNK_SIZE)
+            self.MAX_CHUNK_SIZE = int(headers.get(UPLOAD_MAX_CHUNK_SIZE_HEADER) or self.MAX_CHUNK_SIZE)
+            self.MIN_CHUNK_SIZE = int(headers.get(UPLOAD_MIN_CHUNK_SIZE_HEADER) or self.MIN_CHUNK_SIZE)
             self.UPLOAD_CHUNK_SIZE = int(headers.get(UPLOAD_CHUNK_SIZE_HEADER, self.MAX_CHUNK_SIZE))
             self._FILE_UPLOAD_URL = headers.get(UPLOAD_LOCATION_HEADER)
             self._UPLOAD_PART_NUMBER_SET = set(range(1, self.calculate_part_count() + 1))
-            self.cache.set(self._CACHE_LOCATION_KEY, self._FILE_UPLOAD_URL)
+            self.set_cache(self._CACHE_LOCATION_KEY, self._FILE_UPLOAD_URL)
 
     def _get_create_payload(self):
         return {
@@ -197,7 +197,7 @@ class UploadManager:
         }
 
     def _initialize_upload(self, is_retry=False):
-
+        print("IS IT", self.auth.is_access_token())
         if not self.ignore_cache and not is_retry and self.has_cache():
             print("Getting from cache ignore_cache", self.ignore_cache)
             print("Getting from cache is_retry", is_retry)
@@ -208,6 +208,7 @@ class UploadManager:
         headers.update(self.config.to_headers())
         with httpx.Client() as client:
             req = client.post(FILE_UPLOAD_URL, data=self._get_create_payload(), headers=headers)
+            print("RESPONSE HEADERS", req.headers)
             if not req.is_success:
                 error = req.json().get("error", "Failed to initialize uploading %s to Filelib API" % self.file_name)
                 error_code = req.json().get("error_code")

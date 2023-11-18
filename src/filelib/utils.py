@@ -45,6 +45,7 @@ def process_file(file_name, file):
     if not file_name and not getattr(file, "name", None):
         raise FileNameRequiredError("`file` object does not have a name. Provide a `file_name` value.")
     file_name = file_name or file.name
+    file_name = os.path.basename(file_name)
     return file_name, file
 
 

@@ -71,8 +71,8 @@ class FilelibClientTestCase(TestCase):
         client = self.gen_client()
         instance_index = getattr(client, "instance_index", "")
         self.assertTrue(len(instance_index) == 10)
-        # Client._ADDED_FILES must have a key value assigned, key being instance_index
-        self.assertTrue(instance_index in client._ADDED_FILES)
+        # Client.ADDED_FILES must have a key value assigned, key being instance_index
+        self.assertTrue(instance_index in client.ADDED_FILES)
         # Client.PROCESSED_FILES must have a key:value assigned, key being instance_index
         self.assertTrue(instance_index in client.PROCESSED_FILES)
 
@@ -96,10 +96,10 @@ class FilelibClientTestCase(TestCase):
             client.add_file(file=file, config=config)
 
         file_name = "test_file"
-        # Min requirements must add file to Client._ADDED_FILES list.
+        # Min requirements must add file to Client.ADDED_FILES list.
         client.add_file(file=file, file_name=file_name, config=config)
 
-        # Test the file is added to `_ADDED_FILES` property indexed as a dict
+        # Test the file is added to `ADDED_FILES` property indexed as a dict
         added_file_list = client.get_files()
 
         self.assertTrue(len(added_file_list) > 0)
