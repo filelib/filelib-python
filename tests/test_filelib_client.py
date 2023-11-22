@@ -14,7 +14,6 @@ from filelib.constants import (
     ENV_API_SECRET_IDENTIFIER
 )
 from filelib.exceptions import FileNameRequiredError
-from tests.mocks import DummyExecutor
 
 
 class FilelibClientTestCase(TestCase):
@@ -185,39 +184,15 @@ class FilelibClientTestCase(TestCase):
         Aftermath must set Client.PROCESSED_FILES[instance_index][file_index] to instance of UploadManager
 
         """
-        client = self.gen_client(multiprocess=False)
+        client = self.gen_client()
         params = deepcopy(self.add_file_params)
         client.add_file(**params)
-        self.assertEqual(client.IS_MULTIPROCESS, False)
         with mock.patch("filelib.UploadManager.upload", return_value=lambda x: None):
             client.upload()
             file_index = list(client.get_files().keys())[0]
             self.assertTrue(file_index in client.get_processed_files())
             processed_file = client.get_processed_files()[file_index]
             self.assertEqual(type(processed_file), UploadManager)
-
-    def test_multi_process_upload_method(self):
-        """
-
-        Initializing the Client with multiprocess True.
-        Must call `Client.multi_process`
-        Aftermath must set Client.PROCESSED_FILES[instance_index][file_index] to instance of UploadManager
-
-        """
-        client = self.gen_client(multiprocess=True)
-        params = deepcopy(self.add_file_params)
-        client.add_file(**params)
-        self.assertEqual(client.IS_MULTIPROCESS, True)
-        with mock.patch("filelib.UploadManager.upload", return_value=lambda x: None):
-            with mock.patch("filelib.Authentication.acquire_access_token", return_value=lambda x: None):
-                with mock.patch("concurrent.futures.ProcessPoolExecutor.__enter__", return_value=DummyExecutor()):
-                    client.upload()
-                    file_index = list(client.get_files().keys())[0]
-                    self.assertTrue(file_index in client.get_processed_files())
-                    processed_file = client.get_processed_files()[file_index]
-                    self.assertEqual(type(processed_file), UploadManager)
-                    # Processed file object(UploadManager instance) file prop must be Nones
-                    self.assertEqual(processed_file.file, None)
 
     def tearDown(self):
         # Remove Cache storage path after tests are done.

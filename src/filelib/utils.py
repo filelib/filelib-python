@@ -1,11 +1,21 @@
 import os
 import random
 import string
+from multiprocessing import shared_memory
 
-from filelib.constants import FILE_OPEN_MODE
+import httpx
+
+from filelib.constants import (
+    ERROR_CODE_HEADER,
+    ERROR_MESSAGE_HEADER,
+    FILE_OPEN_MODE,
+    SHARED_MEMORY_NAME,
+    SHARED_MEMORY_START
+)
 from filelib.exceptions import (
     AccessToFileDeniedError,
     FileDoesNotExistError,
+    FilelibAPIException,
     FileNameRequiredError,
     FileNotSeekableError,
     FileObjectNotReadableError
@@ -53,3 +63,23 @@ def get_random_string(length):
     # choose from all lowercase letter
     letters = string.ascii_letters
     return ''.join(random.choice(letters) for i in range(length))
+
+
+def parse_api_err(res: httpx.Response):
+
+    error = res.headers.get(ERROR_MESSAGE_HEADER)
+    code = res.status_code
+    error_code = res.headers.get(ERROR_CODE_HEADER) or FilelibAPIException.error_code
+    return error, code, error_code
+
+
+# Allow multiprocessing module to share memory between each process.
+def get_shared_memory(size=10):
+    try:
+        shared_mem = shared_memory.SharedMemory(create=True, name=SHARED_MEMORY_NAME, size=size)
+        is_new = True
+        shared_mem.buf[:len(SHARED_MEMORY_START)] = bytearray(SHARED_MEMORY_START, "utf8")
+    except FileExistsError:
+        shared_mem = shared_memory.SharedMemory(name=SHARED_MEMORY_NAME)
+        is_new = False
+    return shared_mem, is_new

@@ -64,28 +64,15 @@ def auth_patcher(*args, **kwargs):
 def mock_authentication(*args, **kwargs):
     with auth_patcher():
         auth = Authentication(source=CREDENTIAL_SOURCE_OPTION_ENV)
-        auth = mock.create_autospec(Authentication, instance=auth)
-        auth.is_access_token.return_value = True
-        auth.get_access_token.return_value = "I_am_access_token"
-        return auth
-
-
-def mock_authentication1(*args, **kwargs):
-    env_mock_data = {
-        ENV_API_KEY_IDENTIFIER: "iam_key",
-        ENV_API_SECRET_IDENTIFIER: "iam_secret"
-    }
-    with mock.patch.dict(os.environ, env_mock_data):
-        with mock.patch("filelib.Authentication.is_access_token", return_value=True):
-            with mock.patch("filelib.Authentication.get_access_token", return_value="iam_access_token"):
-                auth = Authentication(source=CREDENTIAL_SOURCE_OPTION_ENV)
-                return auth
+    auth = mock.create_autospec(Authentication, instance=auth)
+    auth.is_access_token.return_value = True
+    auth.get_access_token.return_value = "I_am_access_token"
+    return auth
 
 
 @contextmanager
-def mock_httpx_request(method, response, status_code=200, headers=None):
+def mock_httpx_request(method, response=None, status_code=200, headers=None):
     trg = "httpx.Client.{method}".format(method=method)
-    print("RESPONSE", response)
     env_mock_data = {
         ENV_API_KEY_IDENTIFIER: "iam_key",
         ENV_API_SECRET_IDENTIFIER: "iam_secret"

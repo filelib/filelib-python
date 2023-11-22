@@ -9,13 +9,12 @@ from jmstorage import Cache
 from . import Authentication
 from .config import FilelibConfig
 from .constants import (
-    ERROR_CODE_HEADER,
-    ERROR_MESSAGE_HEADER,
     FILE_UPLOAD_STATUS_HEADER,
     FILE_UPLOAD_URL,
     UPLOAD_CANCELLED,
     UPLOAD_CHUNK_SIZE_HEADER,
     UPLOAD_COMPLETED,
+    UPLOAD_FAILED,
     UPLOAD_LOCATION_HEADER,
     UPLOAD_MAX_CHUNK_SIZE_HEADER,
     UPLOAD_MIN_CHUNK_SIZE_HEADER,
@@ -26,6 +25,7 @@ from .constants import (
     UPLOAD_STARTED
 )
 from .exceptions import FilelibAPIException, NoChunksToUpload
+from .utils import parse_api_err
 from .utils import process_file as proc_file
 
 
@@ -64,8 +64,6 @@ class UploadManager:
         self.file_name, self.file = self.process_file(file_name, file)
         self.config = config
         self.auth = auth
-        print("IS IT MOCK", self.auth.is_access_token)
-        print("IS IT TRUE", self.auth.is_access_token())
         self.multithreading = multithreading
         self.workers = workers
         # Allow the user to start over an upload from scratch
@@ -95,13 +93,19 @@ class UploadManager:
             return False
         self.cache.set(key, value)
 
+    def delete_cache(self, key):
+        return self.cache.delete(key)
+
+    def truncate_cache(self):
+        self.cache.truncate()
+
     def get_cache_namespace(self):
         """
         Generate checksum of the first 1000 bytes
         """
-        return zlib.crc32(self._get_chunk(1, 1000) + bytes(self.file_name, "utf8"))
+        return zlib.crc32(self.get_chunk(1, 1000) + bytes(self.file_name, "utf8"))
 
-    def _get_chunk(self, part_number, chunk_size=None):
+    def get_chunk(self, part_number, chunk_size=None):
         """
         Get chunk corresponding to the part number provided
         chunk_size to overwrite how to read for chunk.
@@ -127,7 +131,7 @@ class UploadManager:
         """
         return math.ceil(self.get_file_size() / self.UPLOAD_CHUNK_SIZE)
 
-    def get_upload_status(self):
+    def fetch_upload_status(self):
         """
         If we have a reference for the current file being processed
         we can check from the server how much progress has been made.
@@ -140,14 +144,10 @@ class UploadManager:
             # IF 404, means that our cache is out of sync
             # Re-initialize upload.
             if req.status_code == 404:
-                print("DELETING CACHE")
-                self.cache.delete(self._CACHE_LOCATION_KEY)
+                self.delete_cache(self._CACHE_LOCATION_KEY)
                 return self._initialize_upload(is_retry=True)
             if not req.is_success:
-                raise FilelibAPIException(
-                    message="Checking file status from Filelib API failed ",
-                    code=req.status_code
-                )
+                raise FilelibAPIException(*parse_api_err(req))
             self._FILE_UPLOAD_URL = file_url
             self._set_upload_utils("head", req.headers)
 
@@ -159,18 +159,16 @@ class UploadManager:
         """
 
         upload_status = headers.get(FILE_UPLOAD_STATUS_HEADER) or self._FILE_UPLOAD_STATUS
-        self._FILE_UPLOAD_STATUS = upload_status
+        self.MAX_CHUNK_SIZE = int(headers.get(UPLOAD_MAX_CHUNK_SIZE_HEADER) or self.MAX_CHUNK_SIZE)
+        self.MIN_CHUNK_SIZE = int(headers.get(UPLOAD_MIN_CHUNK_SIZE_HEADER) or self.MIN_CHUNK_SIZE)
+        self.UPLOAD_CHUNK_SIZE = int(headers.get(UPLOAD_CHUNK_SIZE_HEADER, self.MAX_CHUNK_SIZE))
+        self.set_upload_status(upload_status)
 
-        if upload_status == UPLOAD_COMPLETED:
-            self._FILE_UPLOAD_STATUS = UPLOAD_COMPLETED
-
-        elif upload_status == UPLOAD_PENDING:
+        if upload_status == UPLOAD_PENDING:
             self._UPLOAD_PART_NUMBER_SET.update(range(1, self.calculate_part_count() + 1))
             self._FILE_UPLOAD_STATUS = UPLOAD_PENDING
 
-        elif upload_status == UPLOAD_STARTED:
-            self._FILE_UPLOAD_STATUS = UPLOAD_STARTED
-            self.UPLOAD_CHUNK_SIZE = int(headers.get(UPLOAD_CHUNK_SIZE_HEADER) or self.UPLOAD_CHUNK_SIZE)
+        elif method.lower() == "head":
             missing_part_numbers = headers.get(UPLOAD_MISSING_PART_NUMBERS_HEADER)
             if missing_part_numbers:
                 # values seperated by comma: "1,2,3,4,5"
@@ -178,13 +176,12 @@ class UploadManager:
                 self._UPLOAD_PART_NUMBER_SET.update(missing_part_numbers)
             last_part_number_uploaded = headers.get(UPLOAD_PART_NUMBER_POSITION_HEADER)
             if last_part_number_uploaded:
-                rest = range(int(last_part_number_uploaded), self.calculate_part_count() + 1)
+                # exclude last part number that is uploaded.
+                rest = range(int(last_part_number_uploaded) + 1, self.calculate_part_count() + 1)
                 self._UPLOAD_PART_NUMBER_SET.update(rest)
 
         if method.lower() == "post":
-            self.MAX_CHUNK_SIZE = int(headers.get(UPLOAD_MAX_CHUNK_SIZE_HEADER) or self.MAX_CHUNK_SIZE)
-            self.MIN_CHUNK_SIZE = int(headers.get(UPLOAD_MIN_CHUNK_SIZE_HEADER) or self.MIN_CHUNK_SIZE)
-            self.UPLOAD_CHUNK_SIZE = int(headers.get(UPLOAD_CHUNK_SIZE_HEADER, self.MAX_CHUNK_SIZE))
+
             self._FILE_UPLOAD_URL = headers.get(UPLOAD_LOCATION_HEADER)
             self._UPLOAD_PART_NUMBER_SET = set(range(1, self.calculate_part_count() + 1))
             self.set_cache(self._CACHE_LOCATION_KEY, self._FILE_UPLOAD_URL)
@@ -197,59 +194,43 @@ class UploadManager:
         }
 
     def _initialize_upload(self, is_retry=False):
-        print("IS IT", self.auth.is_access_token())
         if not self.ignore_cache and not is_retry and self.has_cache():
-            print("Getting from cache ignore_cache", self.ignore_cache)
-            print("Getting from cache is_retry", is_retry)
-            print("Getting from cache self.has_cache()", self.has_cache())
-            return self.get_upload_status()
+            return self.fetch_upload_status()
 
         headers = self.auth.to_headers()
         headers.update(self.config.to_headers())
         with httpx.Client() as client:
             req = client.post(FILE_UPLOAD_URL, data=self._get_create_payload(), headers=headers)
-            print("RESPONSE HEADERS", req.headers)
             if not req.is_success:
-                error = req.json().get("error", "Failed to initialize uploading %s to Filelib API" % self.file_name)
-                error_code = req.json().get("error_code")
-                status_code = req.status_code
-                raise FilelibAPIException(
-                    message=error,
-                    code=status_code,
-                    error_code=error_code
-                )
+                raise FilelibAPIException(*parse_api_err(req))
 
             self._set_upload_utils("post", req.headers)
 
     def upload_chunk(self, part_number):
-
-        chunk = self._get_chunk(part_number)
+        """
+        Send the chunk that belongs to the provided part number to Filelib API
+        """
+        chunk = self.get_chunk(part_number)
         headers = self.auth.to_headers()
         headers[UPLOAD_PART_CHUNK_NUM_HEADER] = str(part_number)
         headers[UPLOAD_CHUNK_SIZE_HEADER] = str(self.UPLOAD_CHUNK_SIZE)
+        # Must raise error if API response is not success
         with httpx.Client() as client:
             req = client.patch(self._FILE_UPLOAD_URL, content=chunk, headers=headers)
             if not req.is_success:
-                error = req.headers.get(ERROR_MESSAGE_HEADER) or \
-                        "Uploading chunk for part %d  of file %s failed" % (part_number, self.file_name)
-                error_code = req.headers.get(ERROR_CODE_HEADER) or FilelibAPIException.error_code
-                raise FilelibAPIException(
-                    message=error,
-                    code=req.status_code,
-                    error_code=error_code
-                )
+                raise FilelibAPIException(*parse_api_err(req))
 
     def single_thread_upload(self):
-        self._FILE_UPLOAD_STATUS = UPLOAD_STARTED
-        for _part_number in self._UPLOAD_PART_NUMBER_SET:
+        self.set_upload_status(UPLOAD_STARTED)
+        for _part_number in self.get_upload_part_number_set():
             self.upload_chunk(_part_number)
-        self._FILE_UPLOAD_STATUS = UPLOAD_COMPLETED
+        self.set_upload_status(UPLOAD_COMPLETED)
 
     def multithread_upload(self):
-        self._FILE_UPLOAD_STATUS = UPLOAD_STARTED
+        self.set_upload_status(UPLOAD_STARTED)
 
         # Upload the highest part number last(out of multithread) so server can decide to mark file completed.
-        part_nums = list(self._UPLOAD_PART_NUMBER_SET)
+        part_nums = list(self.get_upload_part_number_set())
         last_part_number = max(part_nums)
         part_nums.remove(last_part_number)
 
@@ -261,22 +242,18 @@ class UploadManager:
             Multithreading worker requires at least one worker or it must be None.
             Worker value provided: %d
             """ % workers)
-        print("WORKER COUNT", workers)
-        print("UPLAODING PARTS", part_nums)
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             # Start the load operations and mark each future with its URL
             _pn_chunk = {executor.submit(self.upload_chunk, pn): pn for pn in part_nums}
             for _processed_chunk in concurrent.futures.as_completed(_pn_chunk):
-                completed_part_number = _pn_chunk[_processed_chunk]
-
-                print("PROCESSED CHUNK", _pn_chunk[_processed_chunk])
+                # Can access the completed part number as below if we need to.
+                # completed_part_number = _pn_chunk[_processed_chunk]
                 try:
                     _processed_chunk.result()
                 except Exception as exc:
                     self.error = str(exc)
-                    print('Uploading %d failed with: %s' % (completed_part_number, exc))
         self.upload_chunk(last_part_number)
-        self._FILE_UPLOAD_STATUS = UPLOAD_COMPLETED
+        self.set_upload_status(UPLOAD_COMPLETED)
 
     def cleanup(self):
         # so this works when used in a process.
@@ -290,34 +267,50 @@ class UploadManager:
         with httpx.Client() as client:
             req = client.delete(self._FILE_UPLOAD_URL, headers=self.auth.to_headers())
             if not req.is_success:
-                raise FilelibAPIException(
-                    message=req.headers.get(ERROR_MESSAGE_HEADER),
-                    error_code=req.headers.get(ERROR_CODE_HEADER),
-                    code=req.status_code
-                )
-            self._FILE_UPLOAD_STATUS = UPLOAD_CANCELLED
+                raise FilelibAPIException(*parse_api_err(req))
+            self.set_upload_status(UPLOAD_CANCELLED)
 
     def get_error(self):
         return self.error
+
+    def get_upload_part_number_set(self):
+        """
+        return a set of part numbers that is waiting to be uploaded.
+        """
+        return self._UPLOAD_PART_NUMBER_SET
 
     def upload(self):
         """
         Upload file object to Filelib API
         """
         self._initialize_upload()
-        if not self._UPLOAD_PART_NUMBER_SET:
-            raise NoChunksToUpload("File `%s` does not have any parts to upload.", self.file_name)
-        print("Uploading %d part numbers" % self.calculate_part_count())
-        print("UPLOAD URL", self._FILE_UPLOAD_URL)
-        print("UPLOAD SIZE", self.UPLOAD_CHUNK_SIZE)
-        print("ACCESS TOKEn", self.auth.get_access_token())
+
         try:
+
+            if not self.get_upload_part_number_set():
+                raise NoChunksToUpload("File `%s` does not have any parts to upload.", self.file_name)
+
             if self.multithreading:
                 self.multithread_upload()
-            self.single_thread_upload()
-        except Exception:
+            else:
+                self.single_thread_upload()
+        except NoChunksToUpload:
+            if self.get_upload_status() != UPLOAD_COMPLETED:
+                raise
+            # Safely exit otherwise
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self.set_upload_status(UPLOAD_FAILED)
+            self.error = str(e)
             if self.abort_on_fail:
                 self.cancel()
         # Clear cache after successful upload is opted in
         if self.clear_cache:
-            self.cache.truncate()
+            self.truncate_cache()
+
+    def get_upload_status(self):
+        return self._FILE_UPLOAD_STATUS
+
+    def set_upload_status(self, status):
+        self._FILE_UPLOAD_STATUS = status

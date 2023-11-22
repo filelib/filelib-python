@@ -49,3 +49,9 @@ UPLOAD_PENDING = "pending"  # Initialized but no parts are sent
 UPLOAD_STARTED = "started"  # Some parts are sent.
 UPLOAD_CANCELLED = "cancelled"  # User or server cancelled the upload.
 UPLOAD_COMPLETED = "completed"  # All parts are uploaded and transfer completed entirely.
+UPLOAD_FAILED = "failed"  # Error occurred during upload progress.
+
+# MULTIPROCESSING
+SHARED_MEMORY_NAME = "filelib-api-multiprocessing-shared-memory"
+SHARED_MEMORY_START = "{key:0>10}".format(key="started")  # 10 chars
+SHARED_MEMORY_TERMINATE = "{key:0>10}".format(key="terminate")   # 10 chars

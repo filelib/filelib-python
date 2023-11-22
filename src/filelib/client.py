@@ -1,5 +1,3 @@
-import concurrent.futures
-import multiprocessing
 import zlib
 
 from .authentication import Authentication
@@ -8,45 +6,22 @@ from .upload_manager import UploadManager
 from .utils import get_random_string
 
 
-def process_file_by_index(instance_index, file_index):
-    _file_props = Client.ADDED_FILES[instance_index][file_index]
-    up = UploadManager(**_file_props)
-    up.upload()
-    up.cleanup()
-    Client.PROCESSED_FILES[instance_index][file_index] = up
-    return file_index
-
-
 class Client:
     """
     Organize Filelib API operations here
     """
-    # Files added to Client for processing.
-    ADDED_FILES: {} = {}
-    # Processed files by UploadManager
-    PROCESSED_FILES: {} = {}
-
     def __init__(
             self,
-            multiprocess=False,
-            workers=4,
             credentials_source=CREDENTIAL_SOURCE_OPTION_FILE,
-            credentials_path='~/.filelib/credentials'
+            credentials_path='~/.filelib/credentials',
     ):
         self.auth = Authentication(source=credentials_source, path=credentials_path)
-        self.IS_MULTIPROCESS = multiprocess
-        self.workers = workers
+        self.instance_index = self._gen_instance_index()
+        self.ADDED_FILES = {self.instance_index: {}}
+        self.PROCESSED_FILES = {self.instance_index: {}}
 
-        # ADDED_FILES is a static prop. its values will be updated globally
-        # class instance_index will allow access per instance allocation.
-        self.instance_index = get_random_string(10)
-        Client.ADDED_FILES[self.instance_index] = {}
-        Client.PROCESSED_FILES[self.instance_index] = {}
-
-    def __del__(self):
-        # Clean up after at exit instance.
-        del Client.ADDED_FILES[self.instance_index]
-        del Client.PROCESSED_FILES[self.instance_index]
+    def _gen_instance_index(self):
+        return get_random_string(10)
 
     def add_file(
             self,
@@ -80,7 +55,7 @@ class Client:
         })
 
     def get_files(self):
-        return Client.ADDED_FILES.get(self.instance_index)
+        return self.ADDED_FILES.get(self.instance_index)
 
     def get_processed_files(self):
         return self.PROCESSED_FILES[self.instance_index]
@@ -99,32 +74,11 @@ class Client:
             up.upload()
             self.PROCESSED_FILES[self.instance_index][index] = up
 
-    def multiprocess_upload(self):
-        """
-        Upload using multiprocess
-        """
-        self.auth.acquire_access_token()
-        with multiprocessing.Manager() as mng:
-            Client.PROCESSED_FILES[self.instance_index] = mng.dict()
-            file_index_list = self.get_files().keys()
-            with concurrent.futures.ProcessPoolExecutor(max_workers=self.workers) as executor:
-                processed_future = {executor.submit(process_file_by_index, self.instance_index, index): index for index in file_index_list}
-                for future in concurrent.futures.as_completed(processed_future):
-                    index = processed_future[future]
-                    try:
-                        print("INDEX", index)
-                        result = future.result()
-                        print("RESULT", index, result)
-                    except Exception:
-                        raise
-            # TODO: ensure conversion
-            Client.PROCESSED_FILES[self.instance_index] = dict(Client.PROCESSED_FILES[self.instance_index])
+    def _set_instance_index(self, inst_index):
+        self.instance_index = inst_index
 
     def upload(self):
         """
         Initiate the upload for added files.
         """
-        # If multi-processes elected, execute via multiprocessing.
-        if self.IS_MULTIPROCESS:
-            return self.multiprocess_upload()
         return self.single_process()
