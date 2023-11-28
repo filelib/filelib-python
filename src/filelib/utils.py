@@ -65,7 +65,7 @@ def get_random_string(length):
     return ''.join(random.choice(letters) for i in range(length))
 
 
-def parse_api_err(res: httpx.Response):
+def parse_api_err(res: httpx.Response) -> tuple:
 
     error = res.headers.get(ERROR_MESSAGE_HEADER)
     code = res.status_code

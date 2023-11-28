@@ -1,3 +1,4 @@
+import json
 import os
 from concurrent.futures import Executor, Future
 from contextlib import contextmanager
@@ -8,6 +9,8 @@ import httpx
 
 from filelib import Authentication
 from filelib.constants import (
+    CONTENT_TYPE_HEADER,
+    CONTENT_TYPE_JSON,
     CREDENTIAL_SOURCE_OPTION_ENV,
     ENV_API_KEY_IDENTIFIER,
     ENV_API_SECRET_IDENTIFIER
@@ -71,15 +74,50 @@ def mock_authentication(*args, **kwargs):
 
 
 @contextmanager
-def mock_httpx_request(method, response=None, status_code=200, headers=None):
+def mock_request(method, response=None, status_code=200, headers=None):
     trg = "httpx.Client.{method}".format(method=method)
     env_mock_data = {
         ENV_API_KEY_IDENTIFIER: "iam_key",
         ENV_API_SECRET_IDENTIFIER: "iam_secret"
     }
+
+    if not headers:
+        headers = {
+            CONTENT_TYPE_HEADER: CONTENT_TYPE_JSON
+        }
+
+    if CONTENT_TYPE_HEADER not in headers:
+        headers[CONTENT_TYPE_HEADER] = CONTENT_TYPE_JSON
+
+    content = {} if not response else response
+    if headers[CONTENT_TYPE_HEADER] == CONTENT_TYPE_JSON:
+
+        content = json.dumps(content)
+
     with mock.patch.dict(os.environ, env_mock_data):
         with mock.patch("filelib.Authentication.is_access_token", return_value=True):
             with mock.patch("filelib.Authentication.get_access_token", return_value="iam_access_token"):
-                ret_val = httpx.Response(status_code=status_code, headers=headers, json=response or {})
+                request = httpx.Request(method=method, url="")
+                ret_val = httpx.Response(status_code=status_code, request=request, headers=headers, content=content)
                 with mock.patch(trg, return_value=ret_val) as req:
                     yield req
+
+
+# Mock response for GET 200 /api/upload/<file_id>/
+GET_UPLOAD_STATUS_RESPONSE_BODY = {
+    "status": True,
+    "error": None,
+    "error_code": None,
+    "data": {
+        "is_direct_upload": True,
+        "upload_urls": {
+            "1": {
+                "part_number": 1,
+                "url": "https://testservercontainer/some/path",
+                "log_url": "http://testserver/file_id/1/log-part-number-upload/",
+                "method": "put",
+                "platform": "AWS S3"
+            }
+        }
+    }
+}

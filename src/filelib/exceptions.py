@@ -162,3 +162,13 @@ class NoChunksToUpload(FilelibBaseException):
     message = "No chunks to upload for given file."
     code = 400
     error_code = "NO_CHUNKS_TO_UPLOAD"
+
+
+class ChunkUploadFailedError(FilelibBaseException):
+    """
+    Raised when an AWS request fails with error.
+    This will have its own formatter as the structure of the request content is unique to AWS requests.
+    """
+    message = "Chunk Upload Failed"
+    code = 400
+    error_code = "CHUNK_UPLOAD_FAILED"

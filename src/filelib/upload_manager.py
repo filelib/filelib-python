@@ -1,6 +1,7 @@
 import concurrent.futures
 import math
 import os.path
+import typing
 import zlib
 
 import httpx
@@ -24,7 +25,12 @@ from .constants import (
     UPLOAD_PENDING,
     UPLOAD_STARTED
 )
-from .exceptions import FilelibAPIException, NoChunksToUpload
+from .exceptions import (
+    ChunkUploadFailedError,
+    FilelibAPIException,
+    NoChunksToUpload
+)
+from .parsers import UploadErrorParser
 from .utils import parse_api_err
 from .utils import process_file as proc_file
 
@@ -37,15 +43,12 @@ class UploadManager:
     # This value can be changed if server responds with previous uploads.
     UPLOAD_CHUNK_SIZE = MAX_CHUNK_SIZE
 
-    _FILE_SIZE: int = None
-    _FILE_UPLOAD_URL: str = None
-
     _FILE_UPLOAD_STATUS = UPLOAD_PENDING
     # This represents what part numbers to upload.
     _UPLOAD_PART_NUMBER_SET = set()
 
     # Key name for storing unique file URL
-    _CACHE_LOCATION_KEY = "LOCATION"
+    _CACHE_ENTITY_KEY = "LOCATION"
 
     def __init__(
             self,
@@ -66,6 +69,13 @@ class UploadManager:
         self.auth = auth
         self.multithreading = multithreading
         self.workers = workers
+
+        # Filelib API response based params
+        self.is_direct_upload = False
+        self._FILE_SIZE: typing.Optional[int, None] = None
+        self._FILE_ENTITY_URL: typing.Optional[str, None] = None
+        self._FILE_ENTITY_URL_MAP = None
+
         # Allow the user to start over an upload from scratch
         self.ignore_cache = ignore_cache
         self.cache = cache or Cache(namespace=str(self.get_cache_namespace()), path="./subdir")
@@ -83,7 +93,7 @@ class UploadManager:
         # `ignore_cache` setting must return false.
         if self.ignore_cache:
             return False
-        return self.cache.get(self._CACHE_LOCATION_KEY) is not None
+        return self.cache.get(self._CACHE_ENTITY_KEY) is not None
 
     def get_cache(self, key):
         return self.cache.get(key)
@@ -136,25 +146,24 @@ class UploadManager:
         If we have a reference for the current file being processed
         we can check from the server how much progress has been made.
         """
-        file_url = self.get_cache(self._CACHE_LOCATION_KEY)
+        file_url = self.get_cache(self._CACHE_ENTITY_KEY)
         if not file_url:
             raise ValueError("No file url to get status")
         with httpx.Client() as client:
-            req = client.head(file_url, headers=self.auth.to_headers())
+            req = client.get(file_url, headers=self.auth.to_headers())
             # IF 404, means that our cache is out of sync
             # Re-initialize upload.
             if req.status_code == 404:
-                self.delete_cache(self._CACHE_LOCATION_KEY)
-                return self._initialize_upload(is_retry=True)
+                self.delete_cache(self._CACHE_ENTITY_KEY)
+                return self.init_upload(is_retry=True)
             if not req.is_success:
                 raise FilelibAPIException(*parse_api_err(req))
-            self._FILE_UPLOAD_URL = file_url
-            self._set_upload_utils("head", req.headers)
+            self._FILE_ENTITY_URL = file_url
+            self._set_upload_params(req)
 
-    def _set_upload_utils(self, method, headers: dict) -> None:
+    def _parse_headers(self, headers: httpx.Headers) -> None:
         """
         Centralize assigning values to properties that are needed while uploading.
-        :param method: str : indicates what the request method is
         :param headers: dict  headers: dict of headers values provided from Filelib API
         """
 
@@ -164,11 +173,8 @@ class UploadManager:
         self.UPLOAD_CHUNK_SIZE = int(headers.get(UPLOAD_CHUNK_SIZE_HEADER, self.MAX_CHUNK_SIZE))
         self.set_upload_status(upload_status)
 
-        if upload_status == UPLOAD_PENDING:
-            self._UPLOAD_PART_NUMBER_SET.update(range(1, self.calculate_part_count() + 1))
-            self._FILE_UPLOAD_STATUS = UPLOAD_PENDING
+        if upload_status == UPLOAD_STARTED:
 
-        elif method.lower() == "head":
             missing_part_numbers = headers.get(UPLOAD_MISSING_PART_NUMBERS_HEADER)
             if missing_part_numbers:
                 # values seperated by comma: "1,2,3,4,5"
@@ -179,21 +185,28 @@ class UploadManager:
                 # exclude last part number that is uploaded.
                 rest = range(int(last_part_number_uploaded) + 1, self.calculate_part_count() + 1)
                 self._UPLOAD_PART_NUMBER_SET.update(rest)
-
-        if method.lower() == "post":
-
-            self._FILE_UPLOAD_URL = headers.get(UPLOAD_LOCATION_HEADER)
+        if upload_status == UPLOAD_PENDING:
+            self._FILE_ENTITY_URL = headers.get(UPLOAD_LOCATION_HEADER)
             self._UPLOAD_PART_NUMBER_SET = set(range(1, self.calculate_part_count() + 1))
-            self.set_cache(self._CACHE_LOCATION_KEY, self._FILE_UPLOAD_URL)
+        # Store file url
+        self.set_cache(self._CACHE_ENTITY_KEY, self._FILE_ENTITY_URL)
 
-    def _get_create_payload(self):
+    def _get_create_payload(self) -> dict:
         return {
             "file_name": self.file_name,
             "file_size": self.get_file_size(),
             "mimetype": self.content_type
         }
 
-    def _initialize_upload(self, is_retry=False):
+    def init_upload(self, is_retry=False):
+        """
+        *** If there is a cache of the current file, fetch info from Filelib API
+        Create entity on Filelib API for the given file.
+        Filelib API will provide file-object-url
+        Filelib API will provide upload url to send the chunks to.
+        Filelib api might provide log url if direct upload can be achieved to prevent data loss.
+
+        """
         if not self.ignore_cache and not is_retry and self.has_cache():
             return self.fetch_upload_status()
 
@@ -203,8 +216,19 @@ class UploadManager:
             req = client.post(FILE_UPLOAD_URL, data=self._get_create_payload(), headers=headers)
             if not req.is_success:
                 raise FilelibAPIException(*parse_api_err(req))
+            self._set_upload_params(req)
 
-            self._set_upload_utils("post", req.headers)
+    def _set_upload_params(self, response: httpx.Response):
+        data = response.json()['data'] if response.request.method.lower() in ["post", "get"] else {}
+        headers = response.headers
+        self._parse_headers(headers)
+        if data:
+            is_direct_upload = data.get("is_direct_upload", False)
+            self.is_direct_upload = is_direct_upload
+            upload_urls: typing.Mapping[str, dict] = data.get("upload_urls")
+            if upload_urls:
+                self._FILE_ENTITY_URL_MAP = upload_urls
+        self.set_cache(self._CACHE_ENTITY_KEY, self._FILE_ENTITY_URL)
 
     def upload_chunk(self, part_number):
         """
@@ -216,9 +240,27 @@ class UploadManager:
         headers[UPLOAD_CHUNK_SIZE_HEADER] = str(self.UPLOAD_CHUNK_SIZE)
         # Must raise error if API response is not success
         with httpx.Client() as client:
-            req = client.patch(self._FILE_UPLOAD_URL, content=chunk, headers=headers)
+            # self.is_direct_upload = False
+            method = client.patch
+            upload_url = self._FILE_ENTITY_URL
+            log_url = None
+            platform = None
+            # If direct upload possible, get the new method, URL, and log_url
+            if self.is_direct_upload:
+                platform = self._FILE_ENTITY_URL_MAP[str(part_number)]["platform"]
+                method = getattr(client, self._FILE_ENTITY_URL_MAP[str(part_number)]["method"])
+                upload_url = self._FILE_ENTITY_URL_MAP[str(part_number)]["url"]
+                log_url = self._FILE_ENTITY_URL_MAP[str(part_number)]["log_url"]
+
+            _headers = headers if not self.is_direct_upload else {}
+            req = method(upload_url, content=chunk, headers=_headers)
             if not req.is_success:
-                raise FilelibAPIException(*parse_api_err(req))
+                parser = UploadErrorParser(response=req, platform=platform)
+                error = parser.format()
+                raise ChunkUploadFailedError(*error)
+            # send log if successful
+            if log_url:
+                client.post(log_url, headers=headers)
 
     def single_thread_upload(self):
         self.set_upload_status(UPLOAD_STARTED)
@@ -265,7 +307,7 @@ class UploadManager:
         and will delete all previously uploaded parts.
         """
         with httpx.Client() as client:
-            req = client.delete(self._FILE_UPLOAD_URL, headers=self.auth.to_headers())
+            req = client.delete(self._FILE_ENTITY_URL, headers=self.auth.to_headers())
             if not req.is_success:
                 raise FilelibAPIException(*parse_api_err(req))
             self.set_upload_status(UPLOAD_CANCELLED)
@@ -283,8 +325,8 @@ class UploadManager:
         """
         Upload file object to Filelib API
         """
-        self._initialize_upload()
-
+        self.init_upload()
+        # return
         try:
 
             if not self.get_upload_part_number_set():
@@ -299,8 +341,6 @@ class UploadManager:
                 raise
             # Safely exit otherwise
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             self.set_upload_status(UPLOAD_FAILED)
             self.error = str(e)
             if self.abort_on_fail:

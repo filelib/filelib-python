@@ -40,6 +40,8 @@ UPLOAD_PART_CHUNK_NUM_HEADER = "Filelib-Upload-Part-Chunk-Number"
 UPLOAD_CHUNK_SIZE_HEADER = "Filelib-Upload-Chunk-Size"
 UPLOAD_LOCATION_HEADER = "Location"
 FILE_UPLOAD_STATUS_HEADER = "Filelib-File-Upload-Status"
+# GENERIC HEADERS
+CONTENT_TYPE_HEADER = "Content-Type"
 # Error Headers
 ERROR_MESSAGE_HEADER = "Filelib-Error-Message"
 ERROR_CODE_HEADER = "Filelib-Error-Code"
@@ -55,3 +57,7 @@ UPLOAD_FAILED = "failed"  # Error occurred during upload progress.
 SHARED_MEMORY_NAME = "filelib-api-multiprocessing-shared-memory"
 SHARED_MEMORY_START = "{key:0>10}".format(key="started")  # 10 chars
 SHARED_MEMORY_TERMINATE = "{key:0>10}".format(key="terminate")   # 10 chars
+
+# CONTENT TYPE DECLARATIONS
+CONTENT_TYPE_XML = "application/xml"
+CONTENT_TYPE_JSON = "application/json"
