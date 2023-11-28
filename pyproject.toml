@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "filelibpy"
+dynamic = ["version"]
+description = "Filelib API python package. Resumable file uploader and convertor."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "httpx~=0.25",
+    "jmstorage~=0.0",
+    "PyJWT~=2.8",
+    "pytz>=2019.1,<2023.1",
+    "xmltojson==2.0.2"
+]
+license = { file = "LICENSE" }
+authors = [{ name = "JustinMusti" }]
+
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.scripts]
+filelib = "filelib.cli.entrypoint:filelib_cli"
+
+[project.urls]
+"Homepage" = "https://github.com/filelib/filelib-python"
+"Bug Tracker" = "https://github.com/filelib/filelib-python/issues"
+
+[project.optional-dependencies]
+dev = [
+    "flake8~=6.1",
+    "isort==5.12.0",
+    "ipython~=8.12",
+    "mkdocs-material~=9.4",
+    "pytest==7.4.3",
+    "twine==4.0.2",
+]
