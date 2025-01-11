@@ -13,7 +13,7 @@ jobs:
     - name: Check running containers
       run: docker ps -a
     - name: isort Python Imports
-      run: docker exec py38 isort . -m 3 --check
+      run: docker exec py38 isort . -m 3 --ca --check
     - name: PEP8 Check
       run : docker exec py38 flake8
     - name: Run Pytest on Python 3.8
