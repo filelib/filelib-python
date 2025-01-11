@@ -1,13 +1,14 @@
 # FILELIB API ENDPOINTS
 # These values must be configurable for local dev testing
-AUTHENTICATION_URL = "http://api.filelib.local/api/auth/"
-FILE_UPLOAD_URL = "http://api.filelib.local/api/upload/"
+AUTHENTICATION_URL = "https://api.filelib.com/auth/"
+FILE_UPLOAD_URL = "https://api.filelib.com/upload/"
 
 # Tell the API endpoint what SDK is communicating.
 REQUEST_CLIENT_SOURCE = "python_filelib"
+# This indicated to the API upload coming from Python SDK
+UPLOAD_SOURCE = 1
 
 PYTHON_DATETIME_TIMEZONE = 'UTC'
-DATETIME_PRINT_FORMAT = "%Y-%m-%d %H:%M:%S%z"
 
 # Authentication/Credential
 CREDENTIAL_SOURCE_OPTION_FILE = 'file'

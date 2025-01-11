@@ -31,8 +31,7 @@ from .exceptions import (
     NoChunksToUpload
 )
 from .parsers import UploadErrorParser
-from .utils import parse_api_err
-from .utils import process_file as proc_file
+from .utils import parse_api_err, process_file as proc_file
 
 
 class UploadManager:
