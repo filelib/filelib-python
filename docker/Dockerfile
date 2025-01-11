@@ -38,3 +38,11 @@ WORKDIR /home/py
 
 COPY ./ /home/py
 RUN pip install .[dev]
+
+FROM python:3.13 as py313
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /home/py
+
+COPY ./ /home/py
+RUN pip install .[dev]

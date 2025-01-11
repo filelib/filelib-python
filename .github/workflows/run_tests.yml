@@ -26,3 +26,5 @@ jobs:
       run: docker exec py311 pytest --disable-warnings
     - name: Run Pytest on Python 3.12
       run: docker exec py312 pytest --disable-warnings
+    - name: Run Pytest on Python 3.13
+      run: docker exec py313 pytest --disable-warnings
