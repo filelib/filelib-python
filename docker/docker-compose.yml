@@ -46,3 +46,11 @@ services:
       dockerfile: docker/Dockerfile
       target: py312
     command: tail -F i_am_a_tea_pot
+  py313:
+    restart: unless-stopped
+    container_name: py313
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: py313
+    command: tail -F i_am_a_tea_pot

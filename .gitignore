@@ -7,3 +7,4 @@ __pycache__
 .DS_Store
 examples/media/*
 !examples/media/README.md
+!examples/*.py

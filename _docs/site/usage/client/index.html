@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://filelib.com/usage/client/">
       
       
-        <link rel="prev" href="../../getting_started/authentication/">
+        <link rel="prev" href="../../getting_started/storage_configuration/">
       
       
       
@@ -91,7 +91,9 @@
     
       
 
-<header class="md-header" data-md-component="header">
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="Filelib Python - FilelibPy" class="md-header__button md-logo" aria-label="Filelib Python - FilelibPy" data-md-component="logo">
       
@@ -126,6 +128,12 @@
     
     
     <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="black"  aria-hidden="true"  type="radio" name="__palette" id="__palette_1">
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_2">
     
   
 </form>
@@ -192,14 +200,8 @@
     
   </nav>
   
-</header>
     
-    <div class="md-container" data-md-component="container">
       
-      
-        
-          
-            
 <nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
   <div class="md-grid">
     <ul class="md-tabs__list">
@@ -266,7 +268,13 @@
     </ul>
   </div>
 </nav>
-          
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
         
       
       <main class="md-main" data-md-component="main">
@@ -338,6 +346,8 @@
       
         
       
+        
+      
     
     
     
@@ -402,6 +412,26 @@
   
   <span class="md-ellipsis">
     Authentication
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/storage_configuration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Storage Configuration
   </span>
   
 
@@ -534,6 +564,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#adding-files-for-upload" class="md-nav__link">
+    Adding files for upload
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -596,6 +633,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#adding-files-for-upload" class="md-nav__link">
+    Adding files for upload
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -624,7 +668,7 @@
 
 <h1 id="filelib-client">Filelib Client<a class="headerlink" href="#filelib-client" title="Permanent link">&para;</a></h1>
 <p>After the going through the installation process, you can start using the components within the library.</p>
-<p>Please ensure you acquired your API Credentials for <a href="/getting_started/authentication/">Authentication</a></p>
+<p>Please ensure you acquired your API Credentials for <a href="../../getting_started/authentication/">Authentication</a></p>
 <h2 id="client">Client<a class="headerlink" href="#client" title="Permanent link">&para;</a></h2>
 <h3 id="importing-client-into-scope">Importing <code>Client</code> into scope:<a class="headerlink" href="#importing-client-into-scope" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">filelib</span> <span class="kn">import</span> <span class="n">Client</span>
@@ -633,26 +677,83 @@
 There are 3 ways you can authenticate</p>
 <div class="admonition note">
 <p class="admonition-title">Supported ways to provide <strong>Authentication Credentials</strong></p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="importing-client-into-scope-configuration-file" name="__tabbed_1" type="radio" /><input id="importing-client-into-scope-environment-variable" name="__tabbed_1" type="radio" /><input id="importing-client-into-scope-credentails-parameters" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="importing-client-into-scope-configuration-file">Configuration File</label><label for="importing-client-into-scope-environment-variable">Environment Variable</label><label for="importing-client-into-scope-credentails-parameters">Credentails parameters</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="importing-client-into-scope-configuration-file" name="__tabbed_1" type="radio" /><input id="importing-client-into-scope-environment-variable" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="importing-client-into-scope-configuration-file">Configuration File</label><label for="importing-client-into-scope-environment-variable">Environment Variable</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p>Reading from a configuration file will</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="o">*</span> <span class="n">Sed</span> <span class="n">sagittis</span> <span class="n">eleifend</span> <span class="n">rutrum</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="o">*</span> <span class="n">Donec</span> <span class="n">vitae</span> <span class="n">suscipit</span> <span class="n">est</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="o">*</span> <span class="n">Nulla</span> <span class="n">tempor</span> <span class="n">lobortis</span> <span class="n">orci</span>
+<p>Reading from a configuration file is the default when initializing <code>Client</code>
+The following <code>credentials_source</code>, and <code>credentials_path</code> are the default values.
+If you have your file at a different path, just update the <code>credentials_path</code> value to your path.</p>
+<p>A sample <code>~/.filelib/credentials</code> file looks like this:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>[filelib]
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>api_key=filelib-uuid-api-key
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>api_secret=filelib-uuid-api-secret
+</span></code></pre></div></p>
+<p>Now you can initialize your <code>Client</code> as such: </p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">filelib</span> <span class="kn">import</span> <span class="n">Client</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        <span class="n">source</span><span class="o">=</span><span class="s2">&quot;storage_ref&quot;</span><span class="p">,</span>  <span class="c1"># storage configuration reference name.</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;my_dir/&quot;</span>  <span class="c1"># This will be added to the beginning of your file name during storage</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        <span class="n">access</span><span class="o">=</span><span class="s2">&quot;private&quot;</span>  <span class="c1"># Depending what service you are using to store your files, you can set the visibility.</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">credentials_source</span><span class="o">=</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> 
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="n">credentials_path</span><span class="o">=</span><span class="s2">&quot;~/.filelib/credentials&quot;</span>  <span class="c1"># path the your configuration file</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">)</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">1.</span> Sed sagittis eleifend rutrum
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">2.</span> Donec vitae suscipit est
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">3.</span> Nulla tempor lobortis orci
+<p>If you prefer utilizing environment variables, you can set your values in your env with the following keys:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FILELIB_API_KEY</span><span class="o">=</span>api_key_value
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">FILELIB_API_SECRET</span><span class="o">=</span>api_secret_value
+</span></code></pre></div>
+<p>Now you can initate your <code>Client</code> as follows:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">filelib</span> <span class="kn">import</span> <span class="n">Client</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        <span class="n">source</span><span class="o">=</span><span class="s2">&quot;storage_ref&quot;</span><span class="p">,</span>  <span class="c1"># storage configuration reference name.</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;my_dir/&quot;</span>  <span class="c1"># This will be added to the beginning of your file name during storage</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        <span class="n">access</span><span class="o">=</span><span class="s2">&quot;private&quot;</span>  <span class="c1"># Depending what service you are using to store your files, you can set the visibility.</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>        <span class="n">credentials_source</span><span class="o">=</span><span class="s2">&quot;env&quot;</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">)</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+</div>
+<h2 id="adding-files-for-upload">Adding files for upload<a class="headerlink" href="#adding-files-for-upload" title="Permanent link">&para;</a></h2>
+<p>After you initialize <code>Client</code>, now you can add files to be uploaded by chunks.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="adding-files-for-upload-minimal" name="__tabbed_2" type="radio" /><input id="adding-files-for-upload-full" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="adding-files-for-upload-minimal">Minimal</label><label for="adding-files-for-upload-full">Full</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span> <span class="nn">filelib</span> <span class="kn">import</span> <span class="n">Client</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="s2">&quot;storage_ref&quot;</span><span class="p">)</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># Open file</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;~/Downloads/birthday.mp4&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">client</span><span class="o">.</span><span class="n">add_file</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>  <span class="c1"># this will add file to be uploaded but will not read it.</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">1.</span> Sed sagittis eleifend rutrum
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">2.</span> Donec vitae suscipit est
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">3.</span> Nulla tempor lobortis orci
+<p>You can provide additional customizations for each file on how you want to handle it.    </p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span> <span class="nn">filelib</span> <span class="kn">import</span> <span class="n">Client</span><span class="p">,</span> <span class="n">FilelibConfig</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="s2">&quot;storage_ref&quot;</span><span class="p">)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1"># Open file</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;~/Downloads/birthday.mp4&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">config</span> <span class="o">=</span> <span class="n">FilelibConfig</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="s2">&quot;storage_ref&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;file_prefix&quot;</span><span class="p">,</span> <span class="n">access</span><span class="o">=</span><span class="s2">&quot;file_access&quot;</span><span class="p">)</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="n">client</span><span class="o">.</span><span class="n">add_file</span><span class="p">(</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span>  <span class="c1"># You can pass indivual config object per each file customizing it.</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>    <span class="n">workers</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># This will enable threading while chunks are being uploaded incresing speed.</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>    <span class="n">ignore_cache</span><span class="o">=</span><span class="kc">False</span>  <span class="c1"># This will turn off caching of file upload progress. Defaults to False.</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="p">)</span>
 </span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Please note that if you decide to set <code>ignore_cache</code> to <code>True</code>, 
+the upload will not be able to resume from where it left off if it does not complete successfully.</p>
 </div>
 </div>
 </div>
@@ -686,7 +787,7 @@ There are 3 ways you can authenticate</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../../getting_started/authentication/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Authentication">
+          <a href="../../getting_started/storage_configuration/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Storage Configuration">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -696,7 +797,7 @@ There are 3 ways you can authenticate</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Authentication
+                Storage Configuration
               </div>
             </div>
           </a>
@@ -757,7 +858,7 @@ There are 3 ways you can authenticate</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["announce.dismiss", "content.action.view", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.indexes", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["announce.dismiss", "content.action.view", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.indexes", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.81fa17fe.min.js"></script>

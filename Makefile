@@ -10,3 +10,13 @@ down:
 redo:
 	make down
 	make up
+
+test:
+	pytest --disable-warnings .
+
+docker-test:
+	docker exec -it py38 pytest
+	docker exec -it py39 pytest
+	docker exec -it py310 pytest
+	docker exec -it py311 pytest
+	docker exec -it py312 pytest

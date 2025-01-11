@@ -15,7 +15,6 @@ from filelib.constants import (
     CREDENTIALS_FILE_SECTION_API_KEY,
     CREDENTIALS_FILE_SECTION_API_SECRET,
     CREDENTIALS_FILE_SECTION_NAME,
-    DATETIME_PRINT_FORMAT,
     ENV_API_KEY_IDENTIFIER,
     ENV_API_SECRET_IDENTIFIER,
     REQUEST_CLIENT_SOURCE
@@ -150,7 +149,6 @@ class Authentication:
         make a POST request to AUTHENTICATION_URL to acquire an access_token
         :return: None
         """
-
         jwt_payload = self._access_token_payload()
         jwt_encoded = jwt.encode(
             payload=jwt_payload,
@@ -168,7 +166,7 @@ class Authentication:
             if not req.is_success:
                 raise AcquiringAccessTokenFailedError(message=response['error'])
             self.__ACCESS_TOKEN = response["data"]["access_token"]
-            self.__ACCESS_TOKEN_EXPIRATION = datetime.strptime(response["data"]["expiration"], DATETIME_PRINT_FORMAT)
+            self.__ACCESS_TOKEN_EXPIRATION = datetime.fromisoformat(response["data"]["expiration"])
 
     def to_headers(self):
         if not self.is_access_token():
